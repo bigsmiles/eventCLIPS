@@ -157,8 +157,9 @@ struct memoryData
    size_t TempSize;
   };
 
-//#define MemoryData(theEnv) ((struct memoryData *) GetEnvironmentData(theEnv,MEMORY_DATA))
-#define MemoryData(theEnv) ((struct memoryData *) my_MemoryData(theEnv,MEMORY_DATA))
+#define MemoryData(theEnv) ((struct memoryData *) GetEnvironmentData(theEnv,MEMORY_DATA))
+//add by xuchao
+//#define MemoryData(theEnv) ((struct memoryData *) my_MemoryData(theEnv,MEMORY_DATA))
 
 #define GetConserveMemory() EnvGetConserveMemory(GetCurrentEnvironment())
 #define MemRequests() EnvMemRequests(GetCurrentEnvironment())

@@ -1497,7 +1497,7 @@ globle void *EnvAssertString(
    struct fact *theFact;
 
    if ((theFact = StringToFact(theEnv,theString)) == NULL) return(NULL);
-   //theFact->whichDeftemplate = EnvFindDeftemplate()
+  
 
    return((void *) EnvAssert(theEnv,(void *) theFact));
   }

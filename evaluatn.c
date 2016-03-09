@@ -69,7 +69,7 @@
 #include "evaluatn.h"
 
 
-extern CRITICAL_SECTION g_debug;  //add by xuchao
+//extern CRITICAL_SECTION g_debug;  //add by xuchao
 /***************************************/
 /* LOCAL INTERNAL FUNCTION DEFINITIONS */
 /***************************************/

@@ -101,16 +101,7 @@ int main(
 	EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
 	EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
 
-	//*DefmoduleData(betaEnv) = *DefmoduleData(theEnv);
-	/*
-	*PatternData(theEnv) = *PatternData(betaEnv);
-	*DeftemplateData(theEnv) = *DeftemplateData(betaEnv);
-	
-	*AgendaData(theEnv) = *AgendaData(betaEnv);
-	*EngineData(theEnv) = *EngineData(betaEnv);
-	*DefruleData(theEnv) = *DefruleData(betaEnv);
-	*FactData(theEnv) = *FactData(betaEnv);
-	*/
+
 	//EnvReset(theEnv);
 	//EnvReset(betaEnv);
 	struct environmentData *env1 = (struct environmentData*) theEnv;
@@ -145,13 +136,10 @@ int main(
 	total = 0;
 	while (fgets(tmpBuffer, 100, pFile))
 	{
-		//printf("%s\n", tmpBuffer);
 		//Sleep(15);
-		//printf("total:%d\n", total++);
 		EnvAssertString(theEnv, tmpBuffer);
 		
 		//EnvRun(theEnv, -1);
-		//EnvRun(betaEnv, -1);
 	}
 	//EnvRun(theEnv, -1);
 	/*while (total-- > 0)
@@ -187,9 +175,6 @@ int main(
 	Sleep(5000);
 	//CommandLoop(theEnv);
 	//CommandLoop(betaEnv);
-	//char betaFact[10000];
-	//EnvFacts(betaEnv, betaFact, NULL, -1, -1, -1);
-	//printf("betaFact:\n%s\n", betaFact);
 
 
 #if THREAD
@@ -197,8 +182,7 @@ int main(
 	CloseHandle(g_hSemaphoreBufferFull);
 	CloseHandle(g_debug);
 	DeleteCriticalSection(&g_cs);
-	//DeleteCriticalSection(&g_debug);
-	//CloseHandle(hThread);
+	CloseHandle(hThread);
 #endif
 
 	/*==================================================================*/

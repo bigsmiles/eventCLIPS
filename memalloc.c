@@ -138,7 +138,7 @@ globle void *genalloc(
   {
    char *memPtr;
    //add by xuchao
-   EnterCriticalSection(&g_csDebug2);
+   //EnterCriticalSection(&g_csDebug2);
          
 #if   BLOCK_MEMORY
    memPtr = (char *) RequestChunk(theEnv,size);
@@ -183,7 +183,7 @@ globle void *genalloc(
    MemoryData(theEnv)->MemoryCalls++;
  
    //add by xuchao
-   LeaveCriticalSection(&g_csDebug2);
+   //LeaveCriticalSection(&g_csDebug2);
    return((void *) memPtr);
   }
 
