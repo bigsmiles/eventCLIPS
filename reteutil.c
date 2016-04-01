@@ -116,6 +116,9 @@ globle struct partialMatch *CopyPartialMatch(
    linker->bcount = list->bcount;
    linker->hashValue = 0;
 
+   //add by xuchao
+   linker->timeTag = list->timeTag;
+
    for (i = 0; i < linker->bcount; i++) linker->binds[i] = list->binds[i];
 
    return(linker);
@@ -548,13 +551,16 @@ globle struct partialMatch *MergePartialMatches(
   {
    struct partialMatch *linker;
    static struct partialMatch mergeTemplate = { 1 }; /* betaMemory is TRUE, remainder are 0 or NULL */
-  
+   long long l_time = 0, r_time = 0;
    /*=================================*/
    /* Allocate the new partial match. */
    /*=================================*/
    
    linker = get_var_struct(theEnv,partialMatch,sizeof(struct genericMatch) * lhsBind->bcount);
-  
+   //add by xuchao
+   if (lhsBind != 0)l_time = lhsBind->timeTag;
+   if (rhsBind != 0)r_time = rhsBind->timeTag;
+   linker->timeTag = max(l_time, r_time);
    /*============================================*/
    /* Set the flags to their appropriate values. */
    /*============================================*/

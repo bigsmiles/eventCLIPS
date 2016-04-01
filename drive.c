@@ -45,6 +45,8 @@
 #include "setup.h"
 
 #if DEFRULE_CONSTRUCT
+#include <windows.h>
+#include <process.h>
 
 #include "agenda.h"
 #include "constant.h"
@@ -69,10 +71,14 @@
    void                    EmptyDrive(void *,struct joinNode *,struct partialMatch *); // change static by xuchao
    static void                    JoinNetErrorMessage(void *,struct joinNode *);
    
+
+   //add by xuchao
+   extern CRITICAL_SECTION g_runDebug;
 /************************************************/
 /* NetworkAssert: Primary routine for filtering */
 /*   a partial match through the join network.  */
 /************************************************/
+
 globle void NetworkAssert(
   void *theEnv,
   struct partialMatch *binds,
@@ -128,7 +134,9 @@ globle void NetworkAssertRight(
    /* If an incremental reset is being performed and the join */
    /* is not part of the network to be reset, then return.    */
    /*=========================================================*/
-
+#if SLOW
+   SlowDown();//add by xuchao
+#endif
 #if (! BLOAD_ONLY) && (! RUN_TIME)
    if (EngineData(theEnv)->IncrementalResetInProgress && (join->initialize == FALSE)) return;
 #endif
@@ -143,9 +151,7 @@ globle void NetworkAssertRight(
    /* The partial matches entering from the LHS of a join */
    /* are stored in the left beta memory of the join.     */
    /*=====================================================*/
-#if SLOW
-   SlowDown();//add by xuchao
-#endif
+
 
    lhsBinds = GetLeftBetaMemory(join,rhsBinds->hashValue);
 
@@ -331,7 +337,9 @@ globle void NetworkAssertLeft(
    /* If an incremental reset is being performed and the join */
    /* is not part of the network to be reset, then return.    */
    /*=========================================================*/
-
+#if SLOW
+   SlowDown();//add by xuchao
+#endif
 #if (! BLOAD_ONLY) && (! RUN_TIME)
    if (EngineData(theEnv)->IncrementalResetInProgress && (join->initialize == FALSE)) return;
 #endif
@@ -344,9 +352,12 @@ globle void NetworkAssertLeft(
    if (join->ruleToActivate != NULL)
      {
 	   //void *rule = EnvFindDefRule(theEnv,EnvGetDefruleName(GetEnvironmentByIndex(0), join->ruleToActivate));
+	   EnterCriticalSection(&g_runDebug);
 	   AddActivation(theEnv, EnvFindDefrule(theEnv, EnvGetDefruleName(GetEnvironmentByIndex(0), join->ruleToActivate)), lhsBinds);
       //AddActivation(theEnv,join->ruleToActivate,lhsBinds);
+	  
 	  EnvRun(theEnv,-1);
+	  LeaveCriticalSection(&g_runDebug);
       return;
      }
 
@@ -366,9 +377,7 @@ globle void NetworkAssertLeft(
      { EngineData(theEnv)->leftToRightLoops++; }
 #endif
 
-#if SLOW
-   SlowDown();//add by xuchao
-#endif
+
    
    /*====================================*/
    /* Set up the evaluation environment. */
@@ -838,6 +847,10 @@ globle void PPDrive(
    struct joinLink *listOfJoins;
    unsigned long hashValue;
    
+#if SLOW
+   SlowDown();//add by xuchao
+#endif
+
    /*================================================*/
    /* Send the new partial match to all child joins. */
    /*================================================*/
@@ -1013,9 +1026,6 @@ void EmptyDrive(
       return;
      }
 
-#if SLOW
-   SlowDown();//add by xuchao
-#endif
 
    /*=====================================================*/
    /* For exists CEs used as the first pattern of a rule, */

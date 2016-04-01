@@ -84,6 +84,8 @@
 
 //add by xuchao initialized in this file,but used in engine.c MoveOnJoinNetwork() & factmch.c
    struct activeJoinNode *activeNodeHead, *activeNodeTail;
+   extern struct JoinNodeList *joinNodeListHead;
+   extern struct JoinNodeList *joinNodeListTail;
    static int flag = 0;
 
 /*******************************************************/
@@ -394,7 +396,11 @@ globle void *CreateEnvironmentDriver(
 	   activeNodeHead->pre = NULL;
 	   activeNodeHead->next = NULL;
    }
-
+   //add by xuchao
+   joinNodeListHead = (struct JoinNodeList*)malloc(sizeof(struct JoinNodeList));
+   joinNodeListTail = NULL;
+   joinNodeListHead->join = NULL;
+   joinNodeListHead->next = NULL;
 
    EnvInitializeEnvironment(theEnvironment,symbolTable,floatTable,integerTable,bitmapTable,externalAddressTable);
 

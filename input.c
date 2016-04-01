@@ -38,7 +38,7 @@ globle void VariableFactAssert4(void* theEnv, const int id, const char* name) //
 	char tmpBuffer[100];
 	sprintf(tmpBuffer, "(tom id %d name %s)", id, name);
 	EnvAssertString(theEnv, tmpBuffer);
-}
+} 
 globle void VariableFactAssert5(void* theEnv, const int id, const char* name) //name = "tim"
 {
 	char tmpBuffer[100];

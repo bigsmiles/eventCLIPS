@@ -50,7 +50,7 @@
 #include "move.h"
 #include "input.h"
 
-
+#define DEBUGTIME 1
 int main(int, char *[]);
 void UserFunctions(void);
 void EnvUserFunctions(void *);
@@ -59,12 +59,12 @@ void EnvUserFunctions(void *);
 /* main: Starts execution of the expert */
 /*   system development environment.    */
 /****************************************/
+void *betaEnv;
 
-
-#if THREAD
+#if THREAD 
 CRITICAL_SECTION g_cs;
 //CRITICAL_SECTION g_debug; //解决同步问题?
-CRITICAL_SECTION g_csDebug, g_csDebug1, g_csDebug2;
+CRITICAL_SECTION g_csDebug, g_csDebug1, g_csDebug2,g_runDebug;
 HANDLE g_debug;
 HANDLE g_hSemaphoreBufferEmpty, g_hSemaphoreBufferFull;
 HANDLE g_hSemaphoreBuffer;
@@ -75,22 +75,25 @@ int main(
 {
 	void *theEnv;
 	//add by xuchao
-	void *betaEnv;
+	
+	void *thirdEnv;
 #if THREAD
 	InitializeCriticalSection(&g_cs);
 	InitializeCriticalSection(&g_csDebug);
+	InitializeCriticalSection(&g_runDebug);
 	InitializeCriticalSection(&g_csDebug1);
 	InitializeCriticalSection(&g_csDebug2);
 	//g_hSemaphoreBufferEmpty = CreateSemaphore(NULL, 100, 100, NULL);
 	//g_hSemaphoreBufferFull = CreateSemaphore(NULL, 0, 100, NULL);
 	g_hSemaphoreBuffer = CreateSemaphore(NULL, 0, 20000, NULL);
 	g_debug = CreateSemaphore(NULL, 0, 1, NULL);
-	HANDLE hThread;
+	HANDLE hThread,hThread1;
 #endif
 
 	
 	theEnv = CreateEnvironment();
 	betaEnv = CreateEnvironment();
+	thirdEnv = CreateEnvironment();
 	//
 	
 	
@@ -100,6 +103,7 @@ int main(
 
 	EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
 	EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
+	EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
 
 
 	//EnvReset(theEnv);
@@ -107,12 +111,16 @@ int main(
 	struct environmentData *env1 = (struct environmentData*) theEnv;
 	struct environmentData *env2 = (struct environmentData*) betaEnv;
 	//*env1->theData = *env2->theData;
+
 	
 	
 	
 #if THREAD
 	//add by xuchao,start this execute thread
 	hThread = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, betaEnv, 0, NULL);
+	SetThreadAffinityMask(hThread, 1 << 1);//线程指定在某个cpu运行
+	//hThread1 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, thirdEnv, 0, NULL);
+	//SetThreadAffinityMask(hThread1, 1 << 2);//线程指定在某个cpu运行
 #endif
 
 	
@@ -128,19 +136,51 @@ int main(
 	
 
 	FILE *pFile = fopen("D:\\VS\\stdCLIPS\\Debug\\facts.txt", "r");
-
+	
 	if (pFile == NULL)
 		printf("error!\n");
-	char tmpBuffer[100];
-	printf("****************\n");
+	char tmpBuffer[200];
+	//printf("****************\n");
 	total = 0;
+	int tmpBufferLenth = 0;
+	char timeStr[100];
+	__int64 counterOfTimer;
+	LARGE_INTEGER large_time,start,end,finish,freq;
+	int cnt = 0;
+	QueryPerformanceCounter(&large_time);
+	QueryPerformanceFrequency(&freq);
+	//DWORD start = GetTickCount();
+	QueryPerformanceCounter(&start);
 	while (fgets(tmpBuffer, 100, pFile))
 	{
-		//Sleep(15);
+		//if (cnt++ >= 20)break;
+#if DEBUGTIME
+		tmpBufferLenth = strlen(tmpBuffer) - 1;
+		
+		if (tmpBuffer[tmpBufferLenth - 1] == ')' && tmpBuffer[tmpBufferLenth - 2] != ')'){
+			//tmpBuffer[tmpBufferLenth - 1] = '\0';
+			//QueryPerformanceCounter(&large_time);
+			//counterOfTimer = large_time.QuadPart;
+			
+			//sprintf(timeStr, " %I64d)", counterOfTimer);
+			timeStr[0] = '\0';
+		}
+		else if (tmpBuffer[tmpBufferLenth - 1] == ')' && tmpBuffer[tmpBufferLenth - 2] == ')'){
+			tmpBuffer[tmpBufferLenth - 1] = '\0';
+			//QueryPerformanceCounter(&large_time);
+			sprintf(timeStr, "(time %I64d))", large_time.QuadPart);
+		}
+		strcat(tmpBuffer, timeStr);
+#else if
+		
+#endif
+		//printf("%s\n", tmpBuffer);
+		//Sleep(200);
 		EnvAssertString(theEnv, tmpBuffer);
 		
-		//EnvRun(theEnv, -1);
+		//EnvRun(betaEnv, -1);
 	}
+	QueryPerformanceCounter(&end);
 	//EnvRun(theEnv, -1);
 	/*while (total-- > 0)
 	{
@@ -172,16 +212,21 @@ int main(
 	
 	
 	*/
-	Sleep(5000);
+	//WaitForSingleObject(hThread, INFINITE);
+	Sleep(100000);
 	//CommandLoop(theEnv);
 	//CommandLoop(betaEnv);
+	//DWORD end = GetTickCount();
+	QueryPerformanceCounter(&finish);
+	printf("input time: %lf\n", 1.0 * (end.QuadPart - start.QuadPart) / freq.QuadPart);
+	printf("time:%d\n", (finish.QuadPart - start.QuadPart) / freq.QuadPart);
 
 
 #if THREAD
-	CloseHandle(g_hSemaphoreBufferEmpty);
-	CloseHandle(g_hSemaphoreBufferFull);
-	CloseHandle(g_debug);
-	DeleteCriticalSection(&g_cs);
+	//CloseHandle(g_hSemaphoreBufferEmpty);
+	//CloseHandle(g_hSemaphoreBufferFull);
+	//CloseHandle(g_debug);
+	//DeleteCriticalSection(&g_cs);
 	CloseHandle(hThread);
 #endif
 

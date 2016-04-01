@@ -282,9 +282,12 @@ globle struct expr *GetRHSPattern(
    /* then return the fact pattern that was parsed.               */
    /*=============================================================*/
 
+   //add by xuchao
+   //theEnv = GetEnvironmentByIndex(1);
    theDeftemplate = (struct deftemplate *)
                     FindImportedConstruct(theEnv,"deftemplate",NULL,ValueToString(templateName),
                                           &count,TRUE,NULL);
+   //theEnv = GetEnvironmentByIndex(0);
 
    if (count > 1)
      {

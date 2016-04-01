@@ -98,9 +98,7 @@ globle void FactPatternMatch(
    /*=========================================================*/
 
    if (patternPtr == NULL) return;
-#if SLOW
-   SlowDown();
-#endif
+
    /*=======================================================*/
    /* The offsetSlot variable indicates the current offset  */
    /* within the multifield slot being pattern matched.     */
@@ -547,9 +545,7 @@ static void ProcessFactAlphaMatch(
   /*=======================================================*/
   /* Add the pattern to the list of matches for this fact. */
   /*=======================================================*/
-#if SLOW
-  SlowDown();
-#endif
+
   listOfMatches = (struct patternMatch *) theFact->list;
   theFact->list = (void *) get_struct(theEnv,patternMatch);
   ((struct patternMatch *) theFact->list)->next = listOfMatches;

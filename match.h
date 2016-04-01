@@ -88,6 +88,9 @@ struct partialMatch
    struct partialMatch *nextBlocked;
    struct partialMatch *prevBlocked;
    struct genericMatch binds[1];
+
+   //add by xuchao
+   long long timeTag;
   };
 
 /************************************************************/

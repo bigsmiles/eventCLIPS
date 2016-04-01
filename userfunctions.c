@@ -40,12 +40,12 @@
 /* OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.          */
 /*                                                                         */
 /***************************************************************************/
-
+#include <windows.h>
 #include "clips.h"
 
 void UserFunctions(void);
 void EnvUserFunctions(void *);
-
+extern void *betaEnv;
 /*********************************************************/
 /* UserFunctions: Informs the expert system environment  */
 /*   of any user defined functions. In the default case, */
@@ -78,10 +78,52 @@ void EnvUserFunctions(
 #pragma unused(theEnv)
 #endif
 	extern int after(void*);
+	extern long long getTime();
+	extern long long getFactTime();
 
 	EnvDefineFunction2(theEnv, "after", 'i', PTIEF after, "after", "22h");
+	EnvDefineFunction2(theEnv, "getTime", 'g', PTIEF getTime, "getTime", "00");
+	EnvDefineFunction2(theEnv, "getFactTime", 'g', PTIEF getFactTime, "getTime", "11");
   }
+long long getTime(){
+	__int64 counterOfTimer;
+	LARGE_INTEGER large_time;
+	char times[64];
+	long long time;
+	QueryPerformanceCounter(&large_time);
+	time = (long long)large_time.QuadPart;
 
+	//printf("%I64d", time);
+	
+	return time;
+
+}
+long long getFactTime(void* theEnv){
+	//theEnv = betaEnv;
+	DATA_OBJECT first,arg1;
+	void *address;
+	long long time = 0;
+	
+	if (EnvArgCountCheck(theEnv, "after", EXACTLY, 1) == -1){
+		return -1;
+	}
+	EnvRtnUnknown(theEnv, 1, &first);
+	if (GetType(first) == FACT_ADDRESS){
+		address = DOToPointer(first);
+		EnvGetFactSlot(theEnv, address, "time", &arg1);
+	}
+	else {
+		printf("type = %d\n", GetType(first)); return 0;
+	}
+	if (GetType(arg1) == INTEGER){
+		//struct integerHashNode *p = ((struct integerHashNode*)arg1.value);
+		//printf("arg1 : %lld\n", ((struct integerHashNode*)arg1.value)->contents);
+		//time = ValueToLong(arg1.value);
+		time = DOToLong(arg1);
+	}
+	//printf("time = %lld\n", time);
+	return time;
+}
 int after(void* theEnv){
 	//暂时不做检查
 	/*DATA_OBJECT first, second;
@@ -90,6 +132,7 @@ int after(void* theEnv){
 	printf("**%d**\n", GetType(first));
 	printf("%d %d\n",first,GetValue(first));
 	*/
+	//theEnv = betaEnv;
 	DATA_OBJECT first, second;
 	DATA_OBJECT arg1,arg2;
 	long long time1, time2;
@@ -101,7 +144,7 @@ int after(void* theEnv){
 	if (GetType(first) == INSTANCE_NAME)
 	{
 
-		address1 = EnvFindInstance(theEnv, NULL, DOToString(first), FALSE);
+		address1 = EnvFindInstance(theEnv, NULL, DOToString(first), FALSE); 
 		EnvDirectGetSlot(theEnv, address1, "endTime", &arg1);
 	}
 	else if (GetType(first) == INSTANCE_ADDRESS){
@@ -119,15 +162,15 @@ int after(void* theEnv){
 	if (GetType(second) == INSTANCE_NAME)
 	{
 		address2 = EnvFindInstance(theEnv, NULL, DOToString(second), FALSE);
-		EnvDirectGetSlot(theEnv, address2, "startTime", &arg2);
+		EnvDirectGetSlot(theEnv, address2, "endTime", &arg2);
 	}
 	else if (GetType(second) == INSTANCE_ADDRESS){
 		address2 = DOToPointer(second);
-		EnvDirectGetSlot(theEnv, address2, "startTime", &arg2);
+		EnvDirectGetSlot(theEnv, address2, "endTime", &arg2);
 	}
 	else if (GetType(second) == FACT_ADDRESS){
 		address2 = DOToPointer(second);
-		EnvGetFactSlot(theEnv, address2, "startTime",&arg2);
+		EnvGetFactSlot(theEnv, address2, "endTime",&arg2);
 	}
 	else{
 		printf("arg should be INSTANCE_NAME or FACT_ADDRESS");
@@ -152,6 +195,6 @@ int after(void* theEnv){
 	}
 
 	if (time1 > time2)return 1;
-	else return 0;
+	else return -1;
 }
 
