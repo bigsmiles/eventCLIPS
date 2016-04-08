@@ -64,10 +64,10 @@
 #endif
    static void                       DeallocateDefmoduleData(void *);
 
-extern CRITICAL_SECTION g_csDebug, g_csDebug1;//add by xuchao
+//extern CRITICAL_SECTION g_csDebug, g_csDebug1;//add by xuchao
 
 //add by xuchao
-   globle void *my_DefmoduleData(
+   /*globle void *my_DefmoduleData(
 	   void *theEnv,
 	   size_t size)
    {
@@ -77,7 +77,7 @@ extern CRITICAL_SECTION g_csDebug, g_csDebug1;//add by xuchao
 
 	   LeaveCriticalSection(&g_csDebug1);
 	   return r;
-   }
+   }*/
 /**************************************************************/
 /* InitializeDefmodules: Initializes the defmodule construct. */
 /**************************************************************/

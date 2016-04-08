@@ -531,6 +531,7 @@
 #define THREAD 1
 #define SLOW   1
 #define SPEEDUP 1
+#define MUTILTHREAD 1
 /*************************************************/
 /* Any user defined global setup information can */
 /* be included in the file usrsetup.h which is   */

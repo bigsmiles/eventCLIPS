@@ -313,8 +313,9 @@ globle struct joinNode *ConstructJoins(
       theLHS = nextLHS;
       joinNumber++;
       firstJoin = FALSE;
+	  //add by xuchao
 	  lastJoin->nodeMaxSalience = max(lastJoin->nodeMaxSalience, PatternData(theEnv)->GlobalSalience);
-	  lastJoin->nodeMinSalience = min(lastJoin->nodeMaxSalience, PatternData(theEnv)->GlobalSalience);
+	  lastJoin->nodeMinSalience = min(lastJoin->nodeMinSalience, PatternData(theEnv)->GlobalSalience);
      }
 
    /*=================================================*/
@@ -593,24 +594,30 @@ static struct joinNode *CreateNewJoin(
 
    newJoin = get_struct(theEnv,joinNode);
    //add by xuchao
-   newJoin->nodeMaxSalience = newJoin->nodeMaxSalience = PatternData(theEnv)->GlobalSalience;
-   newJoin->activeJoinNodeListHead = (struct activeJoinNode*) malloc(sizeof(struct activeJoinNode));
-   newJoin->activeJoinNodeListHead->next = NULL;
-   newJoin->activeJoinNodeListHead->pre = NULL;
-   newJoin->activeJoinNodeListTail = NULL;
-   newJoin->numOfActiveNode = 0;
-#if SPEEDUP
-   struct JoinNodeList *oneNode = (struct JoinNodeList*)malloc(sizeof(struct JoinNodeList));
-   oneNode->join = newJoin;
-   oneNode->next = NULL;
-   if (joinNodeListHead->next == NULL){
-	   joinNodeListHead->next = oneNode;
-   }
-   else{
-	   joinNodeListTail->next = oneNode;
-   }
-   joinNodeListTail = oneNode;
+   if (theEnv == GetEnvironmentByIndex(0)){
+	   newJoin->nodeMaxSalience = newJoin->nodeMinSalience = PatternData(theEnv)->GlobalSalience;
+
+	   newJoin->activeJoinNodeListHead = (struct activeJoinNode*) malloc(sizeof(struct activeJoinNode));
+	   newJoin->activeJoinNodeListHead->next = NULL;
+	   newJoin->activeJoinNodeListHead->pre = NULL;
+	   newJoin->activeJoinNodeListTail = NULL;
+	   newJoin->numOfActiveNode = 0;
+#if MUTILTHREAD
+	   newJoin->threadTag = newJoin->nodeMaxSalience % 2;
 #endif
+#if SPEEDUP
+	   struct JoinNodeList *oneNode = (struct JoinNodeList*)malloc(sizeof(struct JoinNodeList));
+	   oneNode->join = newJoin;
+	   oneNode->next = NULL;
+	   if (joinNodeListHead->next == NULL){
+		   joinNodeListHead->next = oneNode;
+	   }
+	   else{
+		   joinNodeListTail->next = oneNode;
+	   }
+	   joinNodeListTail = oneNode;
+#endif
+   }
    /*======================================================*/
    /* The first join of a rule does not have a beta memory */
    /* unless the RHS pattern is an exists or not CE.       */

@@ -66,9 +66,10 @@ CRITICAL_SECTION g_cs;
 //CRITICAL_SECTION g_debug; //解决同步问题?
 CRITICAL_SECTION g_csDebug, g_csDebug1, g_csDebug2,g_runDebug;
 HANDLE g_debug;
-HANDLE g_hSemaphoreBufferEmpty, g_hSemaphoreBufferFull;
-HANDLE g_hSemaphoreBuffer;
+
+HANDLE g_hSemaphoreBuffer,g_hSemaphoreBufferOfThread1, g_hSemaphoreBufferOfThread2;
 #endif
+
 int main(
 	int argc,
 	char *argv[])
@@ -79,14 +80,16 @@ int main(
 	void *thirdEnv;
 #if THREAD
 	InitializeCriticalSection(&g_cs);
-	InitializeCriticalSection(&g_csDebug);
+	//InitializeCriticalSection(&g_csDebug);
 	InitializeCriticalSection(&g_runDebug);
-	InitializeCriticalSection(&g_csDebug1);
-	InitializeCriticalSection(&g_csDebug2);
+	//InitializeCriticalSection(&g_csDebug1);
+	//InitializeCriticalSection(&g_csDebug2);
 	//g_hSemaphoreBufferEmpty = CreateSemaphore(NULL, 100, 100, NULL);
 	//g_hSemaphoreBufferFull = CreateSemaphore(NULL, 0, 100, NULL);
-	g_hSemaphoreBuffer = CreateSemaphore(NULL, 0, 20000, NULL);
-	g_debug = CreateSemaphore(NULL, 0, 1, NULL);
+	//g_hSemaphoreBuffer = CreateSemaphore(NULL, 0, 20000, NULL);
+	g_hSemaphoreBufferOfThread1 = CreateSemaphore(NULL, 0, 20000, NULL);
+	g_hSemaphoreBufferOfThread2 = CreateSemaphore(NULL, 0, 20000, NULL);
+	//g_debug = CreateSemaphore(NULL, 0, 1, NULL);
 	HANDLE hThread,hThread1;
 #endif
 
@@ -108,17 +111,27 @@ int main(
 
 	//EnvReset(theEnv);
 	//EnvReset(betaEnv);
-	struct environmentData *env1 = (struct environmentData*) theEnv;
-	struct environmentData *env2 = (struct environmentData*) betaEnv;
+	//struct environmentData *env1 = (struct environmentData*) theEnv;
+	//struct environmentData *env2 = (struct environmentData*) betaEnv;
 	//*env1->theData = *env2->theData;
 
+	struct ThreadNode *env1 = (struct ThreadNode*)malloc(sizeof(struct ThreadNode));
+	env1->theEnv = betaEnv; env1->threadTag = 0;
+	struct ThreadNode *env2 = (struct ThreadNode*)malloc(sizeof(struct ThreadNode));
+	env2->theEnv = thirdEnv; env2->threadTag = 1;
 	
 	
 	
 #if THREAD
 	//add by xuchao,start this execute thread
-	hThread = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, betaEnv, 0, NULL);
+#if MUTILTHREAD
+	hThread = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env1, 0, NULL);
 	SetThreadAffinityMask(hThread, 1 << 1);//线程指定在某个cpu运行
+	hThread1 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env2, 0, NULL);
+	SetThreadAffinityMask(hThread1, 1 << 2);//线程指定在某个cpu运行
+#else if
+	hThread = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, betaEnv, 0, NULL);
+#endif
 	//hThread1 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, thirdEnv, 0, NULL);
 	//SetThreadAffinityMask(hThread1, 1 << 2);//线程指定在某个cpu运行
 #endif
@@ -213,9 +226,12 @@ int main(
 	
 	*/
 	//WaitForSingleObject(hThread, INFINITE);
-	Sleep(100000);
+	//hThread1 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env2, 0, NULL);
+	//hThread = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env1, 0, NULL);
+	Sleep(20000);
 	//CommandLoop(theEnv);
 	//CommandLoop(betaEnv);
+	//CommandLoop(thirdEnv);
 	//DWORD end = GetTickCount();
 	QueryPerformanceCounter(&finish);
 	printf("input time: %lf\n", 1.0 * (end.QuadPart - start.QuadPart) / freq.QuadPart);
@@ -227,7 +243,7 @@ int main(
 	//CloseHandle(g_hSemaphoreBufferFull);
 	//CloseHandle(g_debug);
 	//DeleteCriticalSection(&g_cs);
-	CloseHandle(hThread);
+	//CloseHandle(hThread);
 #endif
 
 	/*==================================================================*/

@@ -61,7 +61,7 @@
 #include "incrrset.h"
 
 #include "drive.h"  
-
+#include "factmngr.h"
 #include "move.h"
   
 /***************************************/
@@ -154,6 +154,10 @@ globle void NetworkAssertRight(
 
 
    lhsBinds = GetLeftBetaMemory(join,rhsBinds->hashValue);
+   //add by xuchao
+   //if (join->nodeMinSalience == 1500 && join->depth == 2){
+	//   if(lhsBinds)printf("right\n");
+   //}
 
 #if DEVELOPER
    if (lhsBinds != NULL)
@@ -332,6 +336,7 @@ globle void NetworkAssertLeft(
    struct partialMatch *oldLHSBinds = NULL;
    struct partialMatch *oldRHSBinds = NULL;
    struct joinNode *oldJoin = NULL;
+   int rhsBindsIsFact = FALSE;
 
    /*=========================================================*/
    /* If an incremental reset is being performed and the join */
@@ -352,12 +357,13 @@ globle void NetworkAssertLeft(
    if (join->ruleToActivate != NULL)
      {
 	   //void *rule = EnvFindDefRule(theEnv,EnvGetDefruleName(GetEnvironmentByIndex(0), join->ruleToActivate));
-	   EnterCriticalSection(&g_runDebug);
+	   
 	   AddActivation(theEnv, EnvFindDefrule(theEnv, EnvGetDefruleName(GetEnvironmentByIndex(0), join->ruleToActivate)), lhsBinds);
       //AddActivation(theEnv,join->ruleToActivate,lhsBinds);
+	  //EnterCriticalSection(&g_runDebug);
 	  
 	  EnvRun(theEnv,-1);
-	  LeaveCriticalSection(&g_runDebug);
+	  //LeaveCriticalSection(&g_runDebug);
       return;
      }
 
@@ -370,13 +376,20 @@ globle void NetworkAssertLeft(
    if (join->joinFromTheRight)
      { rhsBinds = GetRightBetaMemory(join,entryHashValue); }
    else
-     { rhsBinds = GetAlphaMemory(theEnv,(struct patternNodeHeader *) join->rightSideEntryStructure,entryHashValue); }
+   {
+	   rhsBinds = GetAlphaMemory(theEnv, (struct patternNodeHeader *) join->rightSideEntryStructure, entryHashValue); 
+	   //add by xuchao
+	   rhsBindsIsFact = TRUE;
+   }
        
 #if DEVELOPER
    if (rhsBinds != NULL)
      { EngineData(theEnv)->leftToRightLoops++; }
 #endif
 
+   //if (join->nodeMinSalience == 1500 && join->depth == 2){
+	//   if (lhsBinds)printf("left %d\n", join->joinFromTheRight);
+   //}
 
    
    /*====================================*/
@@ -402,6 +415,24 @@ globle void NetworkAssertLeft(
 
    while (rhsBinds != NULL)
      {
+
+	   //add by xuchao
+	   if (rhsBindsIsFact){
+		   struct fact *curFact = (struct fact*)(rhsBinds->binds[0].gm.theMatch->matchingItem);
+		   struct factNotOnJoinNode* p = curFact->factNotOnNode;
+		   int flag = 0;
+		   while (p!= NULL){
+			   if (p->join == join){
+				   flag = 1; break;
+			   }
+			   p = p->next;
+		   }
+		   if (flag){
+			   rhsBinds = rhsBinds->nextInMemory;
+			   continue;
+		   }
+	   }
+	   
       join->memoryCompares++;
 
       /*===================================================*/
@@ -426,6 +457,7 @@ globle void NetworkAssertLeft(
 #if DEVELOPER
          EngineData(theEnv)->leftToRightComparisons++;
 #endif
+		 
          EngineData(theEnv)->GlobalRHSBinds = rhsBinds;
          
          exprResult = EvaluateJoinExpression(theEnv,join->networkTest,join);

@@ -42,6 +42,7 @@
 #if IO_FUNCTIONS
 #include <locale.h>
 #include <stdlib.h>
+#include <Windows.h>
 #include <ctype.h>
 #endif
 
@@ -76,6 +77,9 @@
 /********************/
 
 #define IO_FUNCTION_DATA 64
+
+//add by xuchao
+extern CRITICAL_SECTION g_runDebug;
 
 struct IOFunctionData
   { 
@@ -140,13 +144,15 @@ globle void IOFunctionDefinitions(
 /* PrintoutFunction: H/L access routine   */
 /*   for the printout function.           */
 /******************************************/
+
 globle void PrintoutFunction(
   void *theEnv)
   {
    char *dummyid;
    int i, argCount;
    DATA_OBJECT theArgument;
-
+   EnterCriticalSection(&g_runDebug);
+   
    /*=======================================================*/
    /* The printout function requires at least one argument. */
    /*=======================================================*/
@@ -225,6 +231,7 @@ globle void PrintoutFunction(
            break;
         }
      }
+   LeaveCriticalSection(&g_runDebug);
   }
 
 /*****************************************************/

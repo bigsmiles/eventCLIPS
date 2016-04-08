@@ -49,7 +49,7 @@
 #endif
 
 
-extern CRITICAL_SECTION g_csDebug, g_csDebug1, g_csDebug2;//add by xuchao
+//extern CRITICAL_SECTION g_csDebug, g_csDebug1, g_csDebug2;//add by xuchao
 
 #define STRICT_ALIGN_SIZE sizeof(double)
 
@@ -92,7 +92,7 @@ globle void InitializeMemory(
   }
 
 //add by xuchao
-globle void *my_MemoryData(
+/*globle void *my_MemoryData(
 	void *theEnv,
 	size_t size)
 {
@@ -102,7 +102,7 @@ globle void *my_MemoryData(
 
 	LeaveCriticalSection(&g_csDebug);
 	return r;
-}
+}*/
 /*
 //add by xuchao
 globle void *my_get_struct(

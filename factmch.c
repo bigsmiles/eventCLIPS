@@ -557,6 +557,22 @@ static void ProcessFactAlphaMatch(
   /* Send the partial match to the joins connected to this pattern. */
   /*================================================================*/
 
+  //add by xuchao
+  struct factNotOnJoinNode **p = &theFact->factNotOnNode;
+  *p = (struct factNotOnJoinNode*)malloc(sizeof(struct factNotOnJoinNode));
+  (*p)->join = NULL; (*p)->next = NULL;
+  struct factNotOnJoinNode *tail = *p;
+  for (listOfJoins = thePattern->header.entryJoin;
+	  listOfJoins != NULL;
+	  listOfJoins = listOfJoins->rightMatchNode)
+  {
+	  struct factNotOnJoinNode* one = (struct factNotOnJoinNode*)malloc(sizeof(struct factNotOnJoinNode));
+	  one->join = listOfJoins;
+	  one->next = NULL;
+	  tail->next = one;
+	  tail = tail->next;
+  }
+
   for (listOfJoins = thePattern->header.entryJoin;
        listOfJoins != NULL;
        listOfJoins = listOfJoins->rightMatchNode)
@@ -590,6 +606,7 @@ static void ProcessFactAlphaMatch(
 	  }
 	  activeNodeTail = oneNode;
 	  */
+	  
 	  AddNodeFromAlpha(theEnv,listOfJoins,hashValue,theMarks,theFact,(struct patternNodeHeader *)&thePattern->header);
 	 }
   }

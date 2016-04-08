@@ -118,6 +118,7 @@ struct joinNode
    struct activeJoinNode *activeJoinNodeListHead;
    struct activeJoinNode *activeJoinNodeListTail;
    int numOfActiveNode;
+   int threadTag;
    long long memoryAdds;
    long long memoryDeletes;
    long long memoryCompares;
@@ -138,6 +139,12 @@ struct JoinNodeList{
 	struct joinNode *join;
 	struct JoinNodeList *next;
 };
+#if MUTILTHREAD
+struct ThreadNode{
+	void *theEnv;
+	int threadTag;
+};
+#endif
 // add by xuchao ,globle List for active join Node
 //struct factAndPartialMatch
 //{
