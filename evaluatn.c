@@ -69,7 +69,6 @@
 #include "evaluatn.h"
 
 
-//extern CRITICAL_SECTION g_debug;  //add by xuchao
 /***************************************/
 /* LOCAL INTERNAL FUNCTION DEFINITIONS */
 /***************************************/
@@ -125,7 +124,7 @@ globle int EvaluateExpression(
    struct profileFrameInfo profileFrame;
 #endif
 
-   //EnterCriticalSection(&g_debug); //add by xuchao
+   
 
    if (problem == NULL)
      {
@@ -435,7 +434,7 @@ globle int EvaluateExpression(
      }
 
    PropagateReturnValue(theEnv,returnValue);
-   //LeaveCriticalSection(&g_debug); //add by xuchao
+   
    return(EvaluationData(theEnv)->EvaluationError);
   }
 

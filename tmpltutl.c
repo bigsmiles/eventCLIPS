@@ -456,9 +456,12 @@ globle struct templateSlot *FindSlot(
    slotPtr = theDeftemplate->slotList;
    while (slotPtr != NULL)
      {
+#if THREAD
 	   //add by xuchao
 	   if (strcmp(name->contents,slotPtr->slotName->contents) == 0)
-      //if (slotPtr->slotName == name)
+#else if
+      if (slotPtr->slotName == name)
+#endif
         { return(slotPtr); }
       (*whichOne)++;
       slotPtr = slotPtr->next;

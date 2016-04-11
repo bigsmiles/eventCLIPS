@@ -313,9 +313,11 @@ globle struct joinNode *ConstructJoins(
       theLHS = nextLHS;
       joinNumber++;
       firstJoin = FALSE;
+#if THREAD
 	  //add by xuchao
 	  lastJoin->nodeMaxSalience = max(lastJoin->nodeMaxSalience, PatternData(theEnv)->GlobalSalience);
 	  lastJoin->nodeMinSalience = min(lastJoin->nodeMinSalience, PatternData(theEnv)->GlobalSalience);
+#endif 
      }
 
    /*=================================================*/
@@ -593,6 +595,7 @@ static struct joinNode *CreateNewJoin(
    /*======================*/
 
    newJoin = get_struct(theEnv,joinNode);
+#if THREAD
    //add by xuchao
    if (theEnv == GetEnvironmentByIndex(0)){
 	   newJoin->nodeMaxSalience = newJoin->nodeMinSalience = PatternData(theEnv)->GlobalSalience;
@@ -618,6 +621,8 @@ static struct joinNode *CreateNewJoin(
 	   joinNodeListTail = oneNode;
 #endif
    }
+#endif // THREAD
+  
    /*======================================================*/
    /* The first join of a rule does not have a beta memory */
    /* unless the RHS pattern is an exists or not CE.       */

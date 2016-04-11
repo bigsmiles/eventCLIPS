@@ -188,8 +188,7 @@ struct defmoduleData
   };
   
 #define DefmoduleData(theEnv) ((struct defmoduleData *) GetEnvironmentData(theEnv,DEFMODULE_DATA))
-//add by xuchao
-//#define DefmoduleData(theEnv)  ((struct defmoduleData *) my_DefmoduleData(theEnv,DEFMODULE_DATA))
+
 
 #ifdef LOCALE
 #undef LOCALE
@@ -238,8 +237,7 @@ struct defmoduleData
    LOCALE void                           IllegalModuleSpecifierMessage(void *);
    LOCALE void                           AllocateDefmoduleGlobals(void *);
 
-   //add by xuchao
-   LOCALE void							 *my_DefmoduleData(void *, size_t);
+   
 #endif
 
 

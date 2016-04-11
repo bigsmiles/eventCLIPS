@@ -116,8 +116,10 @@ globle struct partialMatch *CopyPartialMatch(
    linker->bcount = list->bcount;
    linker->hashValue = 0;
 
+#if THREAD
    //add by xuchao
    linker->timeTag = list->timeTag;
+#endif 
 
    for (i = 0; i < linker->bcount; i++) linker->binds[i] = list->binds[i];
 
@@ -557,10 +559,12 @@ globle struct partialMatch *MergePartialMatches(
    /*=================================*/
    
    linker = get_var_struct(theEnv,partialMatch,sizeof(struct genericMatch) * lhsBind->bcount);
+#if THREAD
    //add by xuchao
    if (lhsBind != 0)l_time = lhsBind->timeTag;
    if (rhsBind != 0)r_time = rhsBind->timeTag;
    linker->timeTag = max(l_time, r_time);
+#endif
    /*============================================*/
    /* Set the flags to their appropriate values. */
    /*============================================*/
@@ -636,6 +640,7 @@ globle struct partialMatch *CreateAlphaMatch(
    unsigned long hashValue;
    struct alphaMemoryHash *theAlphaMemory;
 
+#if THREAD
    //add by xuchao ,one fact only can call this func once;
    struct alphaMemoryHash *tryAlpha;
    struct partialMatch *p;
@@ -655,7 +660,7 @@ globle struct partialMatch *CreateAlphaMatch(
 		   p = p->prevInMemory;
 	   }
    }
-
+#endif
 
    /*==================================================*/
    /* Create the alpha match and intialize its values. */

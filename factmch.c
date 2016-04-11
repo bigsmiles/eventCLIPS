@@ -538,10 +538,11 @@ static void ProcessFactAlphaMatch(
   /* Create the partial match for the pattern. */
   /*===========================================*/
 
+#if !THREAD
   //remove by xuchao
-  //theMatch = CreateAlphaMatch(theEnv,theFact,theMarks,(struct patternNodeHeader *) &thePattern->header,hashValue);
-  //theMatch->owner = &thePattern->header;
-
+  theMatch = CreateAlphaMatch(theEnv,theFact,theMarks,(struct patternNodeHeader *) &thePattern->header,hashValue);
+  theMatch->owner = &thePattern->header;
+#endif
   /*=======================================================*/
   /* Add the pattern to the list of matches for this fact. */
   /*=======================================================*/
@@ -550,13 +551,14 @@ static void ProcessFactAlphaMatch(
   theFact->list = (void *) get_struct(theEnv,patternMatch);
   ((struct patternMatch *) theFact->list)->next = listOfMatches;
   ((struct patternMatch *) theFact->list)->matchingPattern = (struct patternNodeHeader *) thePattern;
+#if !THREAD
   //remove by xuchao
-  //((struct patternMatch *) theFact->list)->theMatch = theMatch;
-
+  ((struct patternMatch *) theFact->list)->theMatch = theMatch;
+#endif
   /*================================================================*/
   /* Send the partial match to the joins connected to this pattern. */
   /*================================================================*/
-
+#if THREAD
   //add by xuchao
   struct factNotOnJoinNode **p = &theFact->factNotOnNode;
   *p = (struct factNotOnJoinNode*)malloc(sizeof(struct factNotOnJoinNode));
@@ -572,42 +574,22 @@ static void ProcessFactAlphaMatch(
 	  tail->next = one;
 	  tail = tail->next;
   }
-
+#endif
   for (listOfJoins = thePattern->header.entryJoin;
        listOfJoins != NULL;
        listOfJoins = listOfJoins->rightMatchNode)
      { 
+
+#if !THREAD
+	  NetworkAssert(theEnv,theMatch,listOfJoins); 
+#else
 	  /**********************add by xuchao ***********************/
 	  /*create the paritialMatch and JoinNode as activeJoinNode	 */
 	  /*and place it in the globel List activeNodeHead,and then	 */
 	  /*the MoveOnJoinNetwork() will do other's work			 */
 	  /***********************************************************/
-	  //NetworkAssert(theEnv,theMatch,listOfJoins); 
-	  //theMatch = CreateAlphaMatch(theEnv, theFact, theMarks, (struct patternNodeHeader *) &thePattern->header, hashValue);
-	  //theMatch->owner = &thePattern->header;
-
-	  //repalce the function AddNodeFromAlpha()
-	  /*
-	  oneNode = (struct activeJoinNode*) malloc(sizeof(struct activeJoinNode));
-	  oneNode->currentJoinNode = listOfJoins;
-	  theMatch = NULL;
-	  oneNode->currentParialMatch = theMatch; //null
-	  oneNode->curPMOnWhichSide = RHS;
-	  oneNode->markers = theMarks;
-	  oneNode->theEntity = theFact;
-	  oneNode->theHeader = (struct patternNodeHeader *)&thePattern->header;
-	  oneNode->hashOffset = hashValue;
-	  oneNode->next = NULL;
-	  if (activeNodeHead->next == NULL){ activeNodeHead->next = oneNode; oneNode->pre = activeNodeHead;}
-	  else
-	  {
-		  activeNodeTail->next = oneNode;
-		  oneNode->pre = activeNodeTail;
-	  }
-	  activeNodeTail = oneNode;
-	  */
-	  
 	  AddNodeFromAlpha(theEnv,listOfJoins,hashValue,theMarks,theFact,(struct patternNodeHeader *)&thePattern->header);
+#endif
 	 }
   }
 

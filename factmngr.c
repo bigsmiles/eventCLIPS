@@ -116,13 +116,14 @@ globle void InitializeFacts(
                                                    NULL
                                                  };
     
+#if THREAD
    //add by xuchao
    struct fact dummyFact = { { NULL, NULL, 0, 0L }, NULL, NULL, -1L, 0, 0, 1,
 	   NULL,NULL, NULL, NULL, NULL, { 1, 0, 0UL, NULL, { { 0, NULL } } } };
-
-   //struct fact dummyFact = { { NULL, NULL, 0, 0L }, NULL, NULL, -1L, 0, 0, 1,
-   //                               NULL, NULL, NULL, NULL, { 1, 0, 0UL, NULL, { { 0, NULL } } } };
-   
+#else if
+   struct fact dummyFact = { { NULL, NULL, 0, 0L }, NULL, NULL, -1L, 0, 0, 1,
+                                  NULL, NULL, NULL, NULL, { 1, 0, 0UL, NULL, { { 0, NULL } } } };
+#endif   
    AllocateEnvironmentData(theEnv,FACTS_DATA,sizeof(struct factsData),DeallocateFactData);
 
    memcpy(&FactData(theEnv)->FactInfo,&factInfo,sizeof(struct patternEntityRecord)); 

@@ -49,7 +49,6 @@
 #endif
 
 
-//extern CRITICAL_SECTION g_csDebug, g_csDebug1, g_csDebug2;//add by xuchao
 
 #define STRICT_ALIGN_SIZE sizeof(double)
 
@@ -91,44 +90,7 @@ globle void InitializeMemory(
    for (i = 0; i < MEM_TABLE_SIZE; i++) MemoryData(theEnv)->MemoryTable[i] = NULL;
   }
 
-//add by xuchao
-/*globle void *my_MemoryData(
-	void *theEnv,
-	size_t size)
-{
-	EnterCriticalSection(&g_csDebug);
-	void *r;
-	r = GetEnvironmentData(theEnv, MEMORY_DATA);
 
-	LeaveCriticalSection(&g_csDebug);
-	return r;
-}*/
-/*
-//add by xuchao
-globle void *my_get_struct(
-	void *theEnv,
-	size_t size)
-{
-	EnterCriticalSection(&g_csDebug);
-	void *r;
-	r = get_struct_help(theEnv, size);
-
-	LeaveCriticalSection(&g_csDebug);
-	return r;
-}
-globle void *my_get_var_struct(
-	void *theEnv,
-	size_t size,
-	long vsize)
-{
-	EnterCriticalSection(&g_csDebug1);
-	void *r;
-	r = get_var_struct_help(theEnv, size,vsize);
-
-	LeaveCriticalSection(&g_csDebug1);
-	return r;
-}
-*/
 /***************************************************/
 /* genalloc: A generic memory allocation function. */
 /***************************************************/

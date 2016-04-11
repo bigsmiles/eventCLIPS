@@ -45,11 +45,14 @@ struct fact;
 #include "tmpltdef.h"
 #endif
 
+#if THREAD
 //add by xuchao
 struct factNotOnJoinNode{
 	struct joinNode* join;
 	struct factNotOnJoinNode *next;
 };
+#endif
+
 struct fact
   {
    struct patternEntity factHeader;
@@ -59,8 +62,10 @@ struct fact
    unsigned long hashValue;
    unsigned int depth : 15;
    unsigned int garbage : 1;
+#if THREAD
    //add by xuchao
    struct factNotOnJoinNode * factNotOnNode;
+#endif
    struct fact *previousFact;
    struct fact *nextFact;
    struct fact *previousTemplateFact;

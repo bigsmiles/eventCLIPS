@@ -113,12 +113,14 @@ struct joinNode
    unsigned int rhsType : 3;
    unsigned int depth : 16;
    long bsaveID;
+#if THREAD
    long nodeMaxSalience;  //add bu xuchao
    long nodeMinSalience;
    struct activeJoinNode *activeJoinNodeListHead;
    struct activeJoinNode *activeJoinNodeListTail;
    int numOfActiveNode;
    int threadTag;
+#endif
    long long memoryAdds;
    long long memoryDeletes;
    long long memoryCompares;
@@ -134,23 +136,18 @@ struct joinNode
    struct joinNode *rightMatchNode;
    struct defrule *ruleToActivate;
   };
+#if THREAD
 //add by xuchao,to save activeJoinNode
 struct JoinNodeList{
 	struct joinNode *join;
 	struct JoinNodeList *next;
 };
-#if MUTILTHREAD
+
 struct ThreadNode{
 	void *theEnv;
 	int threadTag;
 };
-#endif
-// add by xuchao ,globle List for active join Node
-//struct factAndPartialMatch
-//{
-//	void *theEntity;
-//	struct partialMatch* PMfromAlpha;
-//};
+
 struct activeJoinNode
 {
 	char curPMOnWhichSide;
@@ -173,6 +170,8 @@ struct activeJoinNode
 
 	long long timeTag;
 };
+#endif //THREAD
+
 #endif
 
 

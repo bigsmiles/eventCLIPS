@@ -151,8 +151,9 @@ globle void PrintoutFunction(
    char *dummyid;
    int i, argCount;
    DATA_OBJECT theArgument;
+#if THREAD
    EnterCriticalSection(&g_runDebug);
-   
+#endif   
    /*=======================================================*/
    /* The printout function requires at least one argument. */
    /*=======================================================*/
@@ -231,7 +232,9 @@ globle void PrintoutFunction(
            break;
         }
      }
+#if THREAD 
    LeaveCriticalSection(&g_runDebug);
+#endif
   }
 
 /*****************************************************/

@@ -386,6 +386,7 @@ globle void *CreateEnvironmentDriver(
    CurrentEnvironment = theEnvironment; 
 #endif
 
+#if THREAD
    //add by xuchao,initialize globle list activeJoinNode
    if (++flag == 1)
    {
@@ -403,6 +404,7 @@ globle void *CreateEnvironmentDriver(
 	   joinNodeListHead->join = NULL;
 	   joinNodeListHead->next = NULL;
    }
+#endif
    EnvInitializeEnvironment(theEnvironment,symbolTable,floatTable,integerTable,bitmapTable,externalAddressTable);
 
    return(theEnvironment);

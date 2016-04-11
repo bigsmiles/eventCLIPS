@@ -959,7 +959,9 @@ globle void HaltCommand(
   {
    EnvArgCountCheck(theEnv,"halt",EXACTLY,0);
    printf("halt\n");
-   MoveOnJoinNetwork(theEnv);
+#if THREAD
+   MoveOnJoinNetwork(theEnv); //add by xuchao
+#endif
    //EnvHalt(theEnv);
   }
 

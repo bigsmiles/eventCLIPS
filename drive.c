@@ -154,10 +154,6 @@ globle void NetworkAssertRight(
 
 
    lhsBinds = GetLeftBetaMemory(join,rhsBinds->hashValue);
-   //add by xuchao
-   //if (join->nodeMinSalience == 1500 && join->depth == 2){
-	//   if(lhsBinds)printf("right\n");
-   //}
 
 #if DEVELOPER
    if (lhsBinds != NULL)
@@ -356,14 +352,13 @@ globle void NetworkAssertLeft(
    
    if (join->ruleToActivate != NULL)
      {
+#if THREAD
 	   //void *rule = EnvFindDefRule(theEnv,EnvGetDefruleName(GetEnvironmentByIndex(0), join->ruleToActivate));
-	   
 	   AddActivation(theEnv, EnvFindDefrule(theEnv, EnvGetDefruleName(GetEnvironmentByIndex(0), join->ruleToActivate)), lhsBinds);
-      //AddActivation(theEnv,join->ruleToActivate,lhsBinds);
-	  //EnterCriticalSection(&g_runDebug);
-	  
-	  EnvRun(theEnv,-1);
-	  //LeaveCriticalSection(&g_runDebug);
+	   EnvRun(theEnv, -1);
+#else if
+      AddActivation(theEnv,join->ruleToActivate,lhsBinds);
+#endif
       return;
      }
 
@@ -378,8 +373,10 @@ globle void NetworkAssertLeft(
    else
    {
 	   rhsBinds = GetAlphaMemory(theEnv, (struct patternNodeHeader *) join->rightSideEntryStructure, entryHashValue); 
+#if THREAD
 	   //add by xuchao
 	   rhsBindsIsFact = TRUE;
+#endif
    }
        
 #if DEVELOPER
@@ -387,9 +384,6 @@ globle void NetworkAssertLeft(
      { EngineData(theEnv)->leftToRightLoops++; }
 #endif
 
-   //if (join->nodeMinSalience == 1500 && join->depth == 2){
-	//   if (lhsBinds)printf("left %d\n", join->joinFromTheRight);
-   //}
 
    
    /*====================================*/
@@ -416,6 +410,7 @@ globle void NetworkAssertLeft(
    while (rhsBinds != NULL)
      {
 
+#if THREAD
 	   //add by xuchao
 	   if (rhsBindsIsFact){
 		   struct fact *curFact = (struct fact*)(rhsBinds->binds[0].gm.theMatch->matchingItem);
@@ -432,7 +427,7 @@ globle void NetworkAssertLeft(
 			   continue;
 		   }
 	   }
-	   
+#endif	   
       join->memoryCompares++;
 
       /*===================================================*/
@@ -926,18 +921,25 @@ globle void PPDrive(
       /* Add the partial match to the beta memory of the join. */
       /*=======================================================*/
 
+#if !THREAD
 	  //remove by xuchao
-      //UpdateBetaPMLinks(theEnv,linker,lhsBinds,rhsBinds,listOfJoins->join,hashValue,listOfJoins->enterDirection);
-      
+      UpdateBetaPMLinks(theEnv,linker,lhsBinds,rhsBinds,listOfJoins->join,hashValue,listOfJoins->enterDirection);
+#endif    
       if (listOfJoins->enterDirection == LHS)
         { 
-		  //NetworkAssertLeft(theEnv,linker,listOfJoins->join); //modify by xuchao
+#if !THREAD
+		  NetworkAssertLeft(theEnv,linker,listOfJoins->join); //modify by xuchao
+#else if
 		  AddOneActiveNode(theEnv, linker, lhsBinds,rhsBinds,listOfJoins->join, hashValue,LHS); // add by xuchao
+#endif
 		}
       else
         { 
-		  //NetworkAssertRight(theEnv,linker,listOfJoins->join);  //modify by xuchao
+#if !THREAD
+		  NetworkAssertRight(theEnv,linker,listOfJoins->join);  //modify by xuchao
+#else if
 		  AddOneActiveNode(theEnv, linker, lhsBinds,rhsBinds,listOfJoins->join, hashValue,RHS); // add by xuchao
+#endif
 	    }
       
       listOfJoins = listOfJoins->next;
@@ -970,16 +972,21 @@ globle void EPMDrive(
 
       if (listOfJoins->enterDirection == LHS)
         { 
-		  //NetworkAssertLeft(theEnv,linker,listOfJoins->join); //modify by xuchao
+#if !THREAD
+		  NetworkAssertLeft(theEnv,linker,listOfJoins->join); //modify by xuchao
+#else if
 		  //AddOneActiveNode(theEnv, linker, listOfJoins->join, LHS); // add by xuchao
 		  AddOneActiveNode(theEnv, linker, parent,NULL,listOfJoins->join, 0,LHS); // add by xuchao
-
+#endif
 	    }
       else
         { 
-		  //NetworkAssertRight(theEnv,linker,listOfJoins->join); //modify by xuchao
+#if !THREAD
+		  NetworkAssertRight(theEnv,linker,listOfJoins->join); //modify by xuchao
+#else if
 		  //AddOneActiveNode(theEnv, linker, listOfJoins->join, RHS); 
 		  AddOneActiveNode(theEnv, linker, parent,NULL,listOfJoins->join, 0,RHS); // add by xuchao
+#endif
 	    }
         
       listOfJoins = listOfJoins->next;
@@ -1127,30 +1134,37 @@ void EmptyDrive(
       /* Add the partial match to the beta memory of the join. */
       /*=======================================================*/
 
+#if !THREAD
 	  //remove by xuchao
-      //if (join->patternIsExists)
-      //  { UpdateBetaPMLinks(theEnv,linker,existsParent,NULL,listOfJoins->join,hashValue,listOfJoins->enterDirection); }
-      //else
-      //  { UpdateBetaPMLinks(theEnv,linker,NULL,rhsBinds,listOfJoins->join,hashValue,listOfJoins->enterDirection); }
-
+      if (join->patternIsExists)
+        { UpdateBetaPMLinks(theEnv,linker,existsParent,NULL,listOfJoins->join,hashValue,listOfJoins->enterDirection); }
+      else
+        { UpdateBetaPMLinks(theEnv,linker,NULL,rhsBinds,listOfJoins->join,hashValue,listOfJoins->enterDirection); }
+#endif
       if (listOfJoins->enterDirection == LHS)
         { 
-		  //NetworkAssertLeft(theEnv,linker,listOfJoins->join);  //modify by xuchao
+#if !THREAD
+		  NetworkAssertLeft(theEnv,linker,listOfJoins->join);  //modify by xuchao
+		  
+#else if
 		  //AddOneActiveNode(theEnv, linker, listOfJoins->join, LHS); // add by xuchao
 		  if (join->patternIsExists)
 		  {AddOneActiveNode(theEnv, linker, existsParent, NULL, listOfJoins->join, hashValue, LHS);}
 		  else
 		  {AddOneActiveNode(theEnv, linker, NULL, rhsBinds, listOfJoins->join, hashValue, LHS);}
-		  
+#endif		  
 	    }
       else
         {
-		  //NetworkAssertRight(theEnv,linker,listOfJoins->join); //modify by xuchao 
+#if !THREAD
+		  NetworkAssertRight(theEnv,linker,listOfJoins->join); //modify by xuchao 
+#else if
 		  //AddOneActiveNode(theEnv, linker, listOfJoins->join, RHS); // add by xuchao
 		  if (join->patternIsExists)
 		  {AddOneActiveNode(theEnv, linker, existsParent, NULL, listOfJoins->join, hashValue, RHS);}
 		  else
 		  {AddOneActiveNode(theEnv, linker, NULL, rhsBinds, listOfJoins->join, hashValue, RHS);}
+#endif
 	    }
         
       listOfJoins = listOfJoins->next;
