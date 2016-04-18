@@ -74,6 +74,7 @@
 
    //add by xuchao
    extern CRITICAL_SECTION g_runDebug;
+   extern CRITICAL_SECTION g_move;
 /************************************************/
 /* NetworkAssert: Primary routine for filtering */
 /*   a partial match through the join network.  */
@@ -372,7 +373,8 @@ globle void NetworkAssertLeft(
      { rhsBinds = GetRightBetaMemory(join,entryHashValue); }
    else
    {
-	   rhsBinds = GetAlphaMemory(theEnv, (struct patternNodeHeader *) join->rightSideEntryStructure, entryHashValue); 
+	   rhsBinds = GetAlphaMemory(GetEnvironmentByIndex(1), (struct patternNodeHeader *) join->rightSideEntryStructure, entryHashValue);
+	   //rhsBinds = GetAlphaMemory(theEnv, (struct patternNodeHeader *) join->rightSideEntryStructure, entryHashValue); 
 #if THREAD
 	   //add by xuchao
 	   rhsBindsIsFact = TRUE;
@@ -384,7 +386,7 @@ globle void NetworkAssertLeft(
      { EngineData(theEnv)->leftToRightLoops++; }
 #endif
 
-
+  
    
    /*====================================*/
    /* Set up the evaluation environment. */
@@ -407,28 +409,40 @@ globle void NetworkAssertLeft(
    /* the appropriate action for the logic of the join. */
    /*===================================================*/
 
+   //add by xuchao for REALMTHREA
+   //printf("leftrhs: %d %d %d\n", rhsBindsIsFact,rhsBindsIsFact, rhsBinds == NULL ? 0 : 1);
+
    while (rhsBinds != NULL)
      {
 
 #if THREAD
 	   //add by xuchao
+	   
 	   if (rhsBindsIsFact){
 		   struct fact *curFact = (struct fact*)(rhsBinds->binds[0].gm.theMatch->matchingItem);
 		   struct factNotOnJoinNode* p = curFact->factNotOnNode;
 		   int flag = 0;
+		   EnterCriticalSection(&g_move);
 		   while (p!= NULL){
 			   if (p->join == join){
-				   flag = 1; break;
+				   flag = 1; 
+				   break;
 			   }
 			   p = p->next;
+			  
 		   }
+		   LeaveCriticalSection(&g_move);
 		   if (flag){
 			   rhsBinds = rhsBinds->nextInMemory;
 			   continue;
 		   }
+		   
 	   }
+	  
 #endif	   
       join->memoryCompares++;
+	  //add by xuchao for REALMTHREA
+	 //printf("left memo: %d\n", join->memoryCompares++);
 
       /*===================================================*/
       /* If the join has no expression associated with it, */
@@ -885,7 +899,7 @@ globle void PPDrive(
    listOfJoins = join->nextLinks;
    if (listOfJoins == NULL) return;
 
-   /*===============================================================*/
+   /*===============================================================*/ 
    /* In the current implementation, all children of this join must */
    /* be entered from the same side (either all left or all right). */
    /*===============================================================*/

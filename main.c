@@ -67,9 +67,10 @@ void EnvUserFunctions(void *);
 //void *betaEnv;
 CRITICAL_SECTION g_cs;
 //CRITICAL_SECTION g_debug; //解决同步问题?
-CRITICAL_SECTION g_csDebug, g_runDebug;//g_csDebug1, g_csDebug2,
+CRITICAL_SECTION g_csDebug, g_runDebug,g_move;//g_csDebug1, g_csDebug2,
 HANDLE g_debug;
 HANDLE g_hSemaphoreBuffer,g_hSemaphoreBufferOfThread1, g_hSemaphoreBufferOfThread2;
+extern int totalAddActiveNode,totalGetActiveNode;
 #endif
 
 int main(
@@ -82,6 +83,7 @@ int main(
 	void *thirdEnv;
 
 	InitializeCriticalSection(&g_cs);
+	InitializeCriticalSection(&g_move);
 	InitializeCriticalSection(&g_runDebug);
 #if !MUTILTHREAD
 	g_hSemaphoreBuffer = CreateSemaphore(NULL, 0, 20000, NULL);
@@ -102,7 +104,7 @@ int main(
 	
 
 	EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
-#if THREAD
+#if THREAD || REALMTHREAD
 	EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
 	EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
 
@@ -115,7 +117,7 @@ int main(
 	
 #if THREAD
 	//add by xuchao,start this execute thread
-#if MUTILTHREAD
+#if MUTILTHREAD || REALMTHREAD
 	hThread = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env1, 0, NULL);
 	SetThreadAffinityMask(hThread, 1 << 1);//线程指定在某个cpu运行
 	hThread1 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env2, 0, NULL);
@@ -155,7 +157,7 @@ int main(
 		
 #if DEBUGTIME
 		tmpBufferLenth = strlen(tmpBuffer) - 1;
-		
+		Sleep(rand() % 50);
 		if (tmpBuffer[tmpBufferLenth - 1] == ')' && tmpBuffer[tmpBufferLenth - 2] != ')'){
 			timeStr[0] = '\0';
 		}
@@ -168,15 +170,18 @@ int main(
 		
 #endif
 		EnvAssertString(theEnv, tmpBuffer);
-	}
+	} 
 	QueryPerformanceCounter(&end);
-	Sleep(50000);
+	
+	Sleep(15000);
+	//CommandLoop(theEnv);
 #if !THREAD
 	CommandLoop(theEnv);
 #endif
 	QueryPerformanceCounter(&finish);
 	printf("input time: %lf\n", 1.0 * (end.QuadPart - start.QuadPart) / freq.QuadPart);
 	printf("time:%d\n", (finish.QuadPart - start.QuadPart) / freq.QuadPart);
+	printf("total:%d %d\n", totalAddActiveNode,totalGetActiveNode);
 #else 
 	//CommandLoop(theEnv);
 	//CommandLoop(betaEnv);
@@ -190,8 +195,8 @@ int main(
 	//DeleteCriticalSection(&g_cs);
 	DeleteCriticalSection(&g_runDebug);
 	CloseHandle(hThread);
-#if MUTILTHREAD
-	CloseHandle(hThread1);
+#if MUTILTHREAD || REALMTHREAD
+	//CloseHandle(hThread1);
 #endif
 #endif
 

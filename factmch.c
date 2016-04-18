@@ -36,7 +36,7 @@
 #include "setup.h"
 
 #if DEFTEMPLATE_CONSTRUCT && DEFRULE_CONSTRUCT
-
+#include <Windows.h>
 #include "drive.h"
 #include "engine.h"
 #include "envrnmnt.h"
@@ -74,6 +74,7 @@
    //add by xuchao
    extern struct activeJoinNode *activeNodeHead;
    extern struct activeJoinNode *activeNodeTail;
+   extern CRITICAL_SECTION g_move;
 
 /*************************************************************************/
 /* FactPatternMatch: Implements the core loop for fact pattern matching. */
@@ -132,7 +133,9 @@ globle void FactPatternMatch(
       /* multifields. This offset may be negative (if for example a  */
       /* a multifield matched a zero length value).                  */
       /*=============================================================*/
-
+#if SLOW
+	   SlowDown();
+#endif
       theSlotField = patternPtr->whichField;
       if (offsetSlot == patternPtr->whichSlot)
         { theSlotField += offset; }
@@ -258,7 +261,9 @@ globle void FactPatternMatch(
          /* multifield pattern node as if it were a single    */
          /* field pattern node that failed its constraint.    */
          /*===================================================*/
-
+#if SLOW
+		 SlowDown();
+#endif
          patternPtr = GetNextFactPatternNode(theEnv,TRUE,patternPtr);
         }
      }
@@ -560,6 +565,7 @@ static void ProcessFactAlphaMatch(
   /*================================================================*/
 #if THREAD
   //add by xuchao
+  EnterCriticalSection(&g_move);
   struct factNotOnJoinNode **p = &theFact->factNotOnNode;
   *p = (struct factNotOnJoinNode*)malloc(sizeof(struct factNotOnJoinNode));
   (*p)->join = NULL; (*p)->next = NULL;
@@ -574,7 +580,9 @@ static void ProcessFactAlphaMatch(
 	  tail->next = one;
 	  tail = tail->next;
   }
+  LeaveCriticalSection(&g_move);
 #endif
+
   for (listOfJoins = thePattern->header.entryJoin;
        listOfJoins != NULL;
        listOfJoins = listOfJoins->rightMatchNode)
@@ -588,6 +596,9 @@ static void ProcessFactAlphaMatch(
 	  /*and place it in the globel List activeNodeHead,and then	 */
 	  /*the MoveOnJoinNetwork() will do other's work			 */
 	  /***********************************************************/
+#if SLOW
+	  SlowDown();
+#endif
 	  AddNodeFromAlpha(theEnv,listOfJoins,hashValue,theMarks,theFact,(struct patternNodeHeader *)&thePattern->header);
 #endif
 	 }
