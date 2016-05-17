@@ -356,6 +356,7 @@ globle void NetworkAssertLeft(
 #if THREAD
 	   //void *rule = EnvFindDefRule(theEnv,EnvGetDefruleName(GetEnvironmentByIndex(0), join->ruleToActivate));
 	   AddActivation(theEnv, EnvFindDefrule(theEnv, EnvGetDefruleName(GetEnvironmentByIndex(0), join->ruleToActivate)), lhsBinds);
+	   
 	   EnvRun(theEnv, -1);
 #else if
       AddActivation(theEnv,join->ruleToActivate,lhsBinds);
@@ -422,7 +423,7 @@ globle void NetworkAssertLeft(
 		   struct fact *curFact = (struct fact*)(rhsBinds->binds[0].gm.theMatch->matchingItem);
 		   struct factNotOnJoinNode* p = curFact->factNotOnNode;
 		   int flag = 0;
-		   EnterCriticalSection(&g_move);
+		   //EnterCriticalSection(&g_move);
 		   while (p!= NULL){
 			   if (p->join == join){
 				   flag = 1; 
@@ -431,7 +432,7 @@ globle void NetworkAssertLeft(
 			   p = p->next;
 			  
 		   }
-		   LeaveCriticalSection(&g_move);
+		   //LeaveCriticalSection(&g_move);
 		   if (flag){
 			   rhsBinds = rhsBinds->nextInMemory;
 			   continue;

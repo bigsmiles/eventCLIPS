@@ -529,7 +529,7 @@
 
 //add by xuchao
 #define THREAD 1
-#define SLOW   1
+#define SLOW   0
 #define SPEEDUP 1
 #define MUTILTHREAD 0
 #define REALMTHREAD 1

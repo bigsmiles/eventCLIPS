@@ -1239,6 +1239,9 @@ globle struct fact *CreateFactBySize(
    theFact->factHeader.dependents = NULL;
    theFact->whichDeftemplate = NULL;
    theFact->nextFact = NULL;
+#if THREAD
+   theFact->factNotOnNode = NULL;
+#endif
    theFact->previousFact = NULL;
    theFact->previousTemplateFact = NULL;
    theFact->nextTemplateFact = NULL;

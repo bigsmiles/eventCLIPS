@@ -118,7 +118,7 @@ struct joinNode
    long nodeMinSalience;
    struct activeJoinNode *activeJoinNodeListHead;
    struct activeJoinNode *activeJoinNodeListTail;
-   int numOfActiveNode;
+   long long numOfActiveNode;
    int threadTag;
 #endif
    long long memoryAdds;

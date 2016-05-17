@@ -532,7 +532,7 @@ static void ProcessFactAlphaMatch(
    struct joinNode *listOfJoins;
    unsigned long hashValue;
 
-   
+   //printf("------in ProcessFactAlphaMatch: %s %d %d---\n", theFact->whichDeftemplate->header.name->contents, theMarks == NULL ? 1 : theMarks->whichField, ((struct patternNodeHeader *) &thePattern->header));
   /*============================================*/
   /* Create the hash value for the alpha match. */
   /*============================================*/
@@ -565,8 +565,36 @@ static void ProcessFactAlphaMatch(
   /*================================================================*/
 #if THREAD
   //add by xuchao
-  EnterCriticalSection(&g_move);
+  //EnterCriticalSection(&g_move); //remove ok?
   struct factNotOnJoinNode **p = &theFact->factNotOnNode;
+  struct factNotOnJoinNode *tail;
+  //printf("%d %d\n", *p, theFact->factNotOnNode);
+  if (*p == NULL){
+	  *p = (struct factNotOnJoinNode*)malloc(sizeof(struct factNotOnJoinNode));
+	  (*p)->join = NULL; (*p)->next = NULL;
+	  tail = *p;
+  }
+  else{
+	  tail = *p;
+	  while (tail->next != NULL){
+		  tail = tail->next;
+	  }
+  }
+
+  //printf("fact: %s\n", theFact->whichDeftemplate->header.name->contents);
+  for (listOfJoins = thePattern->header.entryJoin;
+	  listOfJoins != NULL;
+	  listOfJoins = listOfJoins->rightMatchNode)
+  {
+	  struct factNotOnJoinNode* one = (struct factNotOnJoinNode*)malloc(sizeof(struct factNotOnJoinNode));
+	  //printf("fact not on join : %d %d %s\n", listOfJoins,theFact,theFact->whichDeftemplate->header.name->contents);
+	  one->join = listOfJoins;
+	  one->next = NULL;
+	  tail->next = one;
+	  tail = tail->next;
+  }
+
+  /*struct factNotOnJoinNode **p = &theFact->factNotOnNode;
   *p = (struct factNotOnJoinNode*)malloc(sizeof(struct factNotOnJoinNode));
   (*p)->join = NULL; (*p)->next = NULL;
   struct factNotOnJoinNode *tail = *p;
@@ -579,8 +607,8 @@ static void ProcessFactAlphaMatch(
 	  one->next = NULL;
 	  tail->next = one;
 	  tail = tail->next;
-  }
-  LeaveCriticalSection(&g_move);
+  }*/
+  //LeaveCriticalSection(&g_move);
 #endif
 
   for (listOfJoins = thePattern->header.entryJoin;
