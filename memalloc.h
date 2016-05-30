@@ -34,7 +34,7 @@ struct chunkInfo;
 struct blockInfo;
 struct memoryPtr;
 
-#define MEM_TABLE_SIZE 50000  //500 to 5000
+#define MEM_TABLE_SIZE 5000  //500 to 5000
 
 #ifdef LOCALE
 #undef LOCALE

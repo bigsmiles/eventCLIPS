@@ -68,6 +68,7 @@
    static void                        TagNetworkTraverseJoins(void *,long int *,long int *,struct joinNode *);
 #endif
    
+
 /***********************************************************/
 /* PrintPartialMatch: Prints out the list of fact indices  */
 /*   and/or instance names associated with a partial match */
@@ -660,6 +661,8 @@ globle struct partialMatch *CreateAlphaMatch(
 		   p = p->prevInMemory;
 	   }
    }
+
+   
 #endif
 
    /*==================================================*/

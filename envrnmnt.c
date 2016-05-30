@@ -400,9 +400,10 @@ globle void *CreateEnvironmentDriver(
    //add by xuchao
    if (++flag == 2){
 	   joinNodeListHead = (struct JoinNodeList*)malloc(sizeof(struct JoinNodeList));
-	   joinNodeListTail = NULL;
+	   joinNodeListTail = joinNodeListHead;
 	   joinNodeListHead->join = NULL;
 	   joinNodeListHead->next = NULL;
+	   joinNodeListHead->pre = NULL;
    }
 #endif
    EnvInitializeEnvironment(theEnvironment,symbolTable,floatTable,integerTable,bitmapTable,externalAddressTable);

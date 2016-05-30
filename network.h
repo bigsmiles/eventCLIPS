@@ -141,6 +141,7 @@ struct joinNode
 struct JoinNodeList{
 	struct joinNode *join;
 	struct JoinNodeList *next;
+	struct joinNodeList *pre;
 };
 
 struct ThreadNode{

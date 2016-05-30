@@ -134,7 +134,7 @@ globle void FactPatternMatch(
       /* a multifield matched a zero length value).                  */
       /*=============================================================*/
 #if SLOW
-	   SlowDown();
+	   //SlowDown();
 #endif
       theSlotField = patternPtr->whichField;
       if (offsetSlot == patternPtr->whichSlot)
@@ -262,7 +262,7 @@ globle void FactPatternMatch(
          /* field pattern node that failed its constraint.    */
          /*===================================================*/
 #if SLOW
-		 SlowDown();
+		 //SlowDown();
 #endif
          patternPtr = GetNextFactPatternNode(theEnv,TRUE,patternPtr);
         }
@@ -625,7 +625,7 @@ static void ProcessFactAlphaMatch(
 	  /*the MoveOnJoinNetwork() will do other's work			 */
 	  /***********************************************************/
 #if SLOW
-	  SlowDown();
+	  //SlowDown();
 #endif
 	  AddNodeFromAlpha(theEnv,listOfJoins,hashValue,theMarks,theFact,(struct patternNodeHeader *)&thePattern->header);
 #endif

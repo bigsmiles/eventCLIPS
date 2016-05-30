@@ -74,7 +74,10 @@ extern int totalAddActiveNode,totalGetActiveNode;
 
 LARGE_INTEGER search_time1, search_time2;
 long long search_time = 0;
+
 #endif
+
+
 
 int main(
 	int argc,
@@ -86,11 +89,17 @@ int main(
 	void *thirdEnv;
 	void *fourEnv;
 
+	/*
 	InitializeCriticalSection(&g_cs);
 	InitializeCriticalSection(&g_move);
 	InitializeCriticalSection(&g_runDebug);
+	*/
+	InitializeCriticalSectionAndSpinCount(&g_cs,0x00000400);
+	InitializeCriticalSectionAndSpinCount(&g_move,0x00000400);
+	InitializeCriticalSectionAndSpinCount(&g_runDebug, 0x00000400);
+
 #if !MUTILTHREAD
-	g_hSemaphoreBuffer = CreateSemaphore(NULL, 0, 9000000, NULL);
+	g_hSemaphoreBuffer = CreateSemaphore(NULL, 0, 30000000, NULL);
 #else
 	g_hSemaphoreBufferOfThread1 = CreateSemaphore(NULL, 0, 20000, NULL);
 	g_hSemaphoreBufferOfThread2 = CreateSemaphore(NULL, 0, 20000, NULL);
@@ -108,22 +117,24 @@ int main(
 #endif
 	
 
-	//EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
-	EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
+	EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
+	//EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
 #if THREAD || REALMTHREAD
-	//EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
-	EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
-	//EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
-	EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
-	//EnvLoad(fourEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
-	EnvLoad(fourEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
+	EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
+	//EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
+	EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
+	//EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
+	EnvLoad(fourEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
+	//EnvLoad(fourEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
 
 	struct ThreadNode *env1 = (struct ThreadNode*)malloc(sizeof(struct ThreadNode));
 	env1->theEnv = betaEnv; env1->threadTag = 0;
 	struct ThreadNode *env2 = (struct ThreadNode*)malloc(sizeof(struct ThreadNode));
 	env2->theEnv = thirdEnv; env2->threadTag = 1;
 	struct ThreadNode *env3 = (struct ThreadNode*)malloc(sizeof(struct ThreadNode));
-	env3->theEnv = fourEnv; env3->threadTag = 1;
+	env3->theEnv = fourEnv; env3->threadTag = 2;
+
+	
 #endif	
 	
 	
@@ -151,8 +162,8 @@ int main(
 	//EnvAssertString(theEnv, "(student (id 100)(name \"tom\"))");
 	
 
-	//FILE *pFile = fopen("D:\\VS\\stdCLIPS\\Debug\\CLIPSFact.txt", "r");
-	FILE *pFile = fopen("D:\\VS\\stdCLIPS\\Debug\\facts.txt", "r");
+	FILE *pFile = fopen("D:\\VS\\stdCLIPS\\Debug\\CLIPSFact.txt", "r");
+	//FILE *pFile = fopen("D:\\VS\\stdCLIPS\\Debug\\facts.txt", "r");
 	
 	if (pFile == NULL)
 		printf("error!\n");
@@ -188,8 +199,8 @@ int main(
 		EnvAssertString(theEnv, tmpBuffer);
 	} 
 	QueryPerformanceCounter(&end);
-	
-	Sleep(60000);
+	 
+	Sleep(100000);
 	//CommandLoop(theEnv);
 #if !THREAD
 	CommandLoop(theEnv);
@@ -200,7 +211,7 @@ int main(
 	printf("time:%d\n", (finish.QuadPart - start.QuadPart) / freq.QuadPart);
 	printf("total:%d %d\n", totalAddActiveNode, totalGetActiveNode);
 	printf("search time: %d\n", search_time);
-	CommandLoop(theEnv);
+	//CommandLoop(theEnv);
 #else 
 	CommandLoop(theEnv);
 	//CommandLoop(betaEnv);
@@ -215,7 +226,7 @@ int main(
 	DeleteCriticalSection(&g_runDebug);
 	CloseHandle(hThread);
 #if MUTILTHREAD || REALMTHREAD
-	CloseHandle(hThread1);
+	//CloseHandle(hThread1);
 #endif
 	
 #endif

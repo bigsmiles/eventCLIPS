@@ -534,6 +534,7 @@
 #define MUTILTHREAD 0
 #define REALMTHREAD 1
 #define AUTOTEST 1
+#define DATASTRUCT 1
 /*************************************************/
 /* Any user defined global setup information can */
 /* be included in the file usrsetup.h which is   */

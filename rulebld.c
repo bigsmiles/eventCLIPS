@@ -609,6 +609,7 @@ static struct joinNode *CreateNewJoin(
 	   newJoin->threadTag = newJoin->nodeMaxSalience % 2;
 #endif
 #if SPEEDUP
+#if !DATASTRUCT
 	   struct JoinNodeList *oneNode = (struct JoinNodeList*)malloc(sizeof(struct JoinNodeList));
 	   oneNode->join = newJoin;
 	   oneNode->next = NULL;
@@ -619,6 +620,7 @@ static struct joinNode *CreateNewJoin(
 		   joinNodeListTail->next = oneNode;
 	   }
 	   joinNodeListTail = oneNode;
+#endif
 #endif
    }
 #endif // THREAD
