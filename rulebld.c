@@ -603,8 +603,11 @@ static struct joinNode *CreateNewJoin(
 	   newJoin->activeJoinNodeListHead = (struct activeJoinNode*) malloc(sizeof(struct activeJoinNode));
 	   newJoin->activeJoinNodeListHead->next = NULL;
 	   newJoin->activeJoinNodeListHead->pre = NULL;
-	   newJoin->activeJoinNodeListTail = NULL;
+	   newJoin->activeJoinNodeListTail = newJoin->activeJoinNodeListHead;
 	   newJoin->numOfActiveNode = 0;
+#if CSECTION
+	   InitializeCriticalSectionAndSpinCount(&(newJoin->nodeSection), 0x00000400);
+#endif
 #if MUTILTHREAD
 	   newJoin->threadTag = newJoin->nodeMaxSalience % 2;
 #endif

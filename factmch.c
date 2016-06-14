@@ -36,7 +36,7 @@
 #include "setup.h"
 
 #if DEFTEMPLATE_CONSTRUCT && DEFRULE_CONSTRUCT
-#include <Windows.h>
+//#include <Windows.h>
 #include "drive.h"
 #include "engine.h"
 #include "envrnmnt.h"

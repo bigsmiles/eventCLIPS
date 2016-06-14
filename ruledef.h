@@ -42,7 +42,9 @@
 
 struct defrule;
 struct defruleModule;
-
+#ifndef _H_network
+#include "network.h"
+#endif
 #ifndef _H_conscomp
 #include "conscomp.h"
 #endif
@@ -70,9 +72,7 @@ struct defruleModule;
 #ifndef _H_agenda
 #include "agenda.h"
 #endif
-#ifndef _H_network
-#include "network.h"
-#endif
+
 
 struct defrule
   {

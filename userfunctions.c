@@ -40,7 +40,7 @@
 /* OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.          */
 /*                                                                         */
 /***************************************************************************/
-#include <windows.h>
+//#include <windows.h>
 #include "clips.h"
 
 void UserFunctions(void);

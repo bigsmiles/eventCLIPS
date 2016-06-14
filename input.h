@@ -12,6 +12,8 @@
 #undef LOCALE
 #endif
 
+
+
 #ifndef _H_factmngr
 #include "factmngr.h"
 #endif
@@ -21,6 +23,7 @@
 #else
 #define LOCALE extern
 #endif
+
 
 LOCALE void					  VariableFactAssert1(void*,const char*,const int,const int);
 LOCALE void					  VariableFactAssert2(void*, const int);

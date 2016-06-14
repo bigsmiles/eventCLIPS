@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 #define _STDIO_INCLUDED_
-#include <windows.h>
+//#include <windows.h>
 
 #include "memalloc.h"
 #include "constant.h"

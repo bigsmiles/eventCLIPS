@@ -30,13 +30,13 @@
 
 #ifndef _H_retract
 #define _H_retract
-
-#ifndef _H_match
-#include "match.h"
-#endif
 #ifndef _H_network
 #include "network.h"
 #endif
+#ifndef _H_match
+#include "match.h"
+#endif
+
 
 #ifdef LOCALE
 #undef LOCALE

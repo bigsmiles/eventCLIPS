@@ -54,6 +54,7 @@
 
 //add by xuchao 
 #include "network.h"
+#include "input.h"
 
 #define SIZE_ENVIRONMENT_HASH  131
 
@@ -396,6 +397,7 @@ globle void *CreateEnvironmentDriver(
 	   activeNodeHead->currentPartialMatch = NULL;
 	   activeNodeHead->pre = NULL;
 	   activeNodeHead->next = NULL;
+	   
    }
    //add by xuchao
    if (++flag == 2){

@@ -45,8 +45,7 @@
 #include "setup.h"
 
 #if DEFRULE_CONSTRUCT
-#include <windows.h>
-#include <process.h>
+//#include <windows.h>
 
 #include "agenda.h"
 #include "constant.h"
@@ -355,9 +354,23 @@ globle void NetworkAssertLeft(
      {
 #if THREAD
 	   //void *rule = EnvFindDefRule(theEnv,EnvGetDefruleName(GetEnvironmentByIndex(0), join->ruleToActivate));
+	   EnterCriticalSection(&g_runDebug);
+	   LARGE_INTEGER large_time;
+	   QueryPerformanceCounter(&large_time);
+	   long long time = (long long)large_time.QuadPart;
+	   printf("%s %lld\n", join->ruleToActivate->header.name->contents,time );
+	   LeaveCriticalSection(&g_runDebug);
+	   /*
 	   AddActivation(theEnv, EnvFindDefrule(theEnv, EnvGetDefruleName(GetEnvironmentByIndex(0), join->ruleToActivate)), lhsBinds);
 	   
-	   EnvRun(theEnv, -1);
+	   oldLHSBinds = EngineData(theEnv)->GlobalLHSBinds;
+	   oldRHSBinds = EngineData(theEnv)->GlobalRHSBinds;
+	   EnterCriticalSection(&g_move);
+	   EnvRun(theEnv, -1); //add by xucaho
+	   LeaveCriticalSection(&g_move);
+	   EngineData(theEnv)->GlobalLHSBinds = oldLHSBinds;
+	   EngineData(theEnv)->GlobalRHSBinds = oldRHSBinds;
+	   */
 #else if
       AddActivation(theEnv,join->ruleToActivate,lhsBinds);
 #endif
@@ -481,7 +494,7 @@ globle void NetworkAssertLeft(
          if (exprResult)
            { EngineData(theEnv)->leftToRightSucceeds++; }
 #endif
-        }
+        } 
 
       /*====================================================*/
       /* If the join expression evaluated to TRUE (i.e.     */
@@ -495,7 +508,7 @@ globle void NetworkAssertLeft(
          /*==============================================*/
          /* Use the PPDrive routine when the join isn't  */
          /* associated with a not CE and it doesn't have */
-         /* a join from the right.                       */
+         /* a join from the right.                       */ 
          /*==============================================*/
 
          if ((join->patternIsNegated == FALSE) &&

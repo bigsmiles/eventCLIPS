@@ -26,12 +26,12 @@
 #ifndef _H_rulebin
 
 #define _H_rulebin
-
-#include "modulbin.h"
-#include "cstrcbin.h"
 #ifndef _H_network
 #include "network.h"
 #endif
+#include "modulbin.h"
+#include "cstrcbin.h"
+
 
 struct bsaveDefrule
   {

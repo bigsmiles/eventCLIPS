@@ -39,16 +39,16 @@
 #ifndef _H_engine
 
 #define _H_engine
-
+#ifndef _H_network
+#include "network.h"
+#endif
 #ifndef _H_lgcldpnd
 #include "lgcldpnd.h"
 #endif
 #ifndef _H_ruledef
 #include "ruledef.h"
 #endif
-#ifndef _H_network
-#include "network.h"
-#endif
+
 #ifndef _H_moduldef
 #include "moduldef.h"
 #endif

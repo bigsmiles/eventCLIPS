@@ -40,8 +40,8 @@
 /* OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.          */
 /*                                                                         */
 /***************************************************************************/
-#include <process.h>
-#include <windows.h>
+
+//#include <windows.h>
 
 #include <stdio.h>
 #include "setup.h"
@@ -145,8 +145,8 @@ int main(
 	SetThreadAffinityMask(hThread, 1 << 1);//线程指定在某个cpu运行
 	hThread1 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env2, 0, NULL);
 	SetThreadAffinityMask(hThread1, 1 << 2);//线程指定在某个cpu运行
-	hThread2 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env3, 0, NULL);
-	SetThreadAffinityMask(hThread2, 1 << 3);//线程指定在某个cpu运行
+	//hThread2 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env3, 0, NULL);
+	//SetThreadAffinityMask(hThread2, 1 << 3);//线程指定在某个cpu运行
 #else if
 	hThread = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env1, 0, NULL);
 #endif

@@ -31,7 +31,9 @@
 #define OBJECT_ASSERT  1
 #define OBJECT_RETRACT 2
 #define OBJECT_MODIFY  3
-
+#ifndef _H_network
+#include "network.h"
+#endif
 #ifndef _H_evaluatn
 #include "evaluatn.h"
 #endif
@@ -41,9 +43,7 @@
 #ifndef _H_match
 #include "match.h"
 #endif
-#ifndef _H_network
-#include "network.h"
-#endif
+
 #ifndef _H_object
 #include "object.h"
 #endif

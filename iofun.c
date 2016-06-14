@@ -42,7 +42,7 @@
 #if IO_FUNCTIONS
 #include <locale.h>
 #include <stdlib.h>
-#include <Windows.h>
+//#include <Windows.h>
 #include <ctype.h>
 #endif
 

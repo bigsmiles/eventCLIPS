@@ -21,13 +21,13 @@
 #ifndef _H_factbld
 
 #define _H_factbld
-
-#ifndef _H_pattern
-#include "pattern.h"
-#endif
 #ifndef _H_network
 #include "network.h"
 #endif
+#ifndef _H_pattern
+#include "pattern.h"
+#endif
+
 
 #ifdef LOCALE
 #undef LOCALE

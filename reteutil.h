@@ -26,16 +26,16 @@
 
 #ifndef _H_reteutil
 #define _H_reteutil
-
+#ifndef _H_network
+#include "network.h"
+#endif
 #ifndef _H_evaluatn
 #include "evaluatn.h"
 #endif
 #ifndef _H_match
 #include "match.h"
 #endif
-#ifndef _H_network
-#include "network.h"
-#endif
+
 
 #ifdef LOCALE
 #undef LOCALE

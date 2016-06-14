@@ -29,13 +29,13 @@ struct patternMatch;
 struct partialMatch;
 struct alphaMatch;
 struct multifieldMarker;
-
-#ifndef _H_evaluatn
-#include "evaluatn.h"
-#endif
 #ifndef _H_network
 #include "network.h"
 #endif
+#ifndef _H_evaluatn
+#include "evaluatn.h"
+#endif
+
 #ifndef _H_pattern
 #include "pattern.h"
 #endif

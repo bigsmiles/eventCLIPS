@@ -119,7 +119,7 @@ globle struct partialMatch *CopyPartialMatch(
 
 #if THREAD
    //add by xuchao
-   linker->timeTag = list->timeTag;
+   //linker->timeTag = list->timeTag;
 #endif 
 
    for (i = 0; i < linker->bcount; i++) linker->binds[i] = list->binds[i];
@@ -562,9 +562,9 @@ globle struct partialMatch *MergePartialMatches(
    linker = get_var_struct(theEnv,partialMatch,sizeof(struct genericMatch) * lhsBind->bcount);
 #if THREAD
    //add by xuchao
-   if (lhsBind != 0)l_time = lhsBind->timeTag;
-   if (rhsBind != 0)r_time = rhsBind->timeTag;
-   linker->timeTag = max(l_time, r_time);
+   //if (lhsBind != 0)l_time = lhsBind->timeTag;
+   //if (rhsBind != 0)r_time = rhsBind->timeTag;
+   //linker->timeTag = max(l_time, r_time);
 #endif
    /*============================================*/
    /* Set the flags to their appropriate values. */

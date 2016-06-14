@@ -27,13 +27,13 @@
 #ifndef _H_rulebld
 
 #define _H_rulebld
-
-#ifndef _H_reorder
-#include "reorder.h"
-#endif
 #ifndef _H_network
 #include "network.h"
 #endif
+#ifndef _H_reorder
+#include "reorder.h"
+#endif
+
 
 #ifdef LOCALE
 #undef LOCALE

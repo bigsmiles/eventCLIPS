@@ -30,7 +30,7 @@
 
 #include <stdio.h>
 #define _STDIO_INCLUDED_
-#include <windows.h>
+//#include <windows.h>
 #include "setup.h"
 
 #include "constant.h"

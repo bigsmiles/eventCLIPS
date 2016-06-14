@@ -24,11 +24,14 @@
 
 #define _H_network
 
+
+
 struct patternNodeHeader;
 struct joinNode;
 struct alphaMemoryHash;
 
 struct activeJoinNode;
+
 
 #ifndef _H_match
 #include "match.h"
@@ -120,6 +123,10 @@ struct joinNode
    struct activeJoinNode *activeJoinNodeListTail;
    long long numOfActiveNode;
    int threadTag;
+#if CSECTION
+   //struct JoinNodeList* attachNode;
+   CRITICAL_SECTION nodeSection;
+#endif
 #endif
    long long memoryAdds;
    long long memoryDeletes;
@@ -135,14 +142,21 @@ struct joinNode
    struct joinNode *lastLevel;
    struct joinNode *rightMatchNode;
    struct defrule *ruleToActivate;
+
   };
+
 #if THREAD
+
 //add by xuchao,to save activeJoinNode
 struct JoinNodeList{
 	struct joinNode *join;
 	struct JoinNodeList *next;
-	struct joinNodeList *pre;
+	struct JoinNodeList *pre;
+#if CSECTION
+	//CRITICAL_SECTION nodeSection;
+#endif
 };
+
 
 struct ThreadNode{
 	void *theEnv;
@@ -170,6 +184,8 @@ struct activeJoinNode
 	unsigned long hashOffset;
 
 	long long timeTag;
+
+	
 };
 #endif //THREAD
 
