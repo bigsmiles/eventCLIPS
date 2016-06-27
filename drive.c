@@ -358,7 +358,7 @@ globle void NetworkAssertLeft(
 	   LARGE_INTEGER large_time;
 	   QueryPerformanceCounter(&large_time);
 	   long long time = (long long)large_time.QuadPart;
-	   printf("%s %lld\n", join->ruleToActivate->header.name->contents,time );
+	   printf("%s %d %lld\n", join->ruleToActivate->header.name->contents,join->ruleToActivate->salience,time );
 	   LeaveCriticalSection(&g_runDebug);
 	   /*
 	   AddActivation(theEnv, EnvFindDefrule(theEnv, EnvGetDefruleName(GetEnvironmentByIndex(0), join->ruleToActivate)), lhsBinds);

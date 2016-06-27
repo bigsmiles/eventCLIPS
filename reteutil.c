@@ -232,7 +232,7 @@ globle void UpdateBetaPMLinks(
    /*======================================*/
    /* Update the alpha memory linked list. */
    /*======================================*/
-      
+#if !SLIDING_WINDOW
    if (rhsBinds != NULL)
      {
       thePM->nextRightChild = rhsBinds->children;
@@ -241,11 +241,11 @@ globle void UpdateBetaPMLinks(
       rhsBinds->children = thePM;
       thePM->rightParent = rhsBinds;
     }
-      
+#endif
    /*=====================================*/
    /* Update the beta memory linked list. */
    /*=====================================*/
-
+#if !SLIDING_WINDOW
    if (lhsBinds != NULL)
      {
       thePM->nextLeftChild = lhsBinds->children;
@@ -254,7 +254,7 @@ globle void UpdateBetaPMLinks(
       lhsBinds->children = thePM;
       thePM->leftParent = lhsBinds;
      }
-
+#endif
    if (! DefruleData(theEnv)->BetaMemoryResizingFlag)
      { return; }
 

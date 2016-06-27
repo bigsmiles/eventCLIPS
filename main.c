@@ -178,7 +178,7 @@ int main(
 	QueryPerformanceFrequency(&freq);
 	//DWORD start = GetTickCount();
 	QueryPerformanceCounter(&start);
-	printf("time:  %lld\n", start.QuadPart);
+	printf("time: 0  %lld\n", start.QuadPart);
 	while (fgets(tmpBuffer, 100, pFile))
 	{
 		

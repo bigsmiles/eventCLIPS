@@ -536,6 +536,7 @@
 #define AUTOTEST 1
 #define DATASTRUCT 1
 #define CSECTION 1
+#define SLIDING_WINDOW 1
 #include <windows.h>
 /*************************************************/
 /* Any user defined global setup information can */

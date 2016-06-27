@@ -26,6 +26,7 @@
 #include "envrnmnt.h"
 
 #define ARRAY 0
+#define SALIENCE 1
 #if THREAD
 
 struct JoinNodeList *joinNodeListHead;
@@ -360,9 +361,22 @@ globle void AddList(struct JoinNodeList* oneNode){
 	//EnterCriticalSection(&g_cs);
 #endif
 	struct JoinNodeList* p = joinNodeListHead->next;
+#if SALIENCE
+	while (p != NULL && p->join->nodeMaxSalience > oneNode->join->nodeMaxSalience){
+		p = p->next;
+	}
+	while(p != NULL && p->join->nodeMaxSalience == oneNode->join->nodeMaxSalience && p->join->depth >= oneNode->join->depth){
+		p = p->next;
+	}
+#else
+
+	
 	while (p != NULL && p->join->depth >= oneNode->join->depth){
 		p = p->next;
 	}
+	
+	//p = NULL; //place it at list tail
+#endif
 	if (p == NULL){
 		joinNodeListTail->next = oneNode;
 		oneNode->pre = joinNodeListTail;
