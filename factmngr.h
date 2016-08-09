@@ -65,6 +65,7 @@ struct fact
 #if THREAD
    //add by xuchao
    struct factNotOnJoinNode * factNotOnNode;
+   long long timestamp;
 #endif
    struct fact *previousFact;
    struct fact *nextFact;

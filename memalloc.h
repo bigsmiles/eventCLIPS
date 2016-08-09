@@ -152,6 +152,11 @@ struct memoryData
    int ChunkInfoSize;
    int BlockMemoryInitialized;
 #endif
+#if SLIDING_WINDOW
+   //struct JoinNodeList* attachNode;
+   CRITICAL_SECTION memoSection;
+   //void* whichEnv;
+#endif
    struct memoryPtr *TempMemoryPtr;
    struct memoryPtr **MemoryTable;
    size_t TempSize;

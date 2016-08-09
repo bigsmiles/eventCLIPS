@@ -52,6 +52,9 @@
    LOCALE struct partialMatch           *MergePartialMatches(void *,struct partialMatch *,struct partialMatch *);
    LOCALE long int                       IncrementPseudoFactIndex(void);
    LOCALE struct partialMatch           *GetAlphaMemory(void *,struct patternNodeHeader *,unsigned long);
+#if SLIDING_WINDOW
+   LOCALE struct alphaMemoryHash           *GetAlphaMemoryHash(void *, struct patternNodeHeader *, unsigned long);
+#endif
    LOCALE struct partialMatch           *GetLeftBetaMemory(struct joinNode *,unsigned long);
    LOCALE struct partialMatch           *GetRightBetaMemory(struct joinNode *,unsigned long);
    LOCALE void                           ReturnLeftMemory(void *,struct joinNode *);

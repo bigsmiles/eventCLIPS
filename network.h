@@ -46,6 +46,9 @@ struct patternNodeHeader
    struct alphaMemoryHash *firstHash;
    struct alphaMemoryHash *lastHash;
    struct joinNode *entryJoin;
+#if SLIDING_WINDOW
+   int refCount;
+#endif
    struct expr *rightHash;
    unsigned int singlefieldNode : 1;
    unsigned int multifieldNode : 1;

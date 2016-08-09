@@ -50,6 +50,9 @@
 
 #include "reteutil.h"
 
+#if SLIDING_WINDOW
+#include "factmngr.h"
+#endif
 /***************************************/
 /* LOCAL INTERNAL FUNCTION DEFINITIONS */
 /***************************************/
@@ -106,10 +109,14 @@ globle struct partialMatch *CopyPartialMatch(
   {
    struct partialMatch *linker;
    unsigned short i;
-
+#if SLIDING_WINDOW
+   EnterCriticalSection(&(MemoryData(theEnv)->memoSection));
+#endif
    linker = get_var_struct(theEnv,partialMatch,sizeof(struct genericMatch) *
                                         (list->bcount - 1));
-
+#if SLIDING_WINDOW
+   LeaveCriticalSection(&(MemoryData(theEnv)->memoSection));
+#endif
    InitializePMLinks(linker);
    linker->betaMemory = TRUE;
    linker->busy = FALSE;
@@ -120,6 +127,11 @@ globle struct partialMatch *CopyPartialMatch(
 #if THREAD
    //add by xuchao
    //linker->timeTag = list->timeTag;
+#if SLIDING_WINDOW
+   linker->l_timeStamp = list->l_timeStamp;
+   linker->r_timeStamp = list->r_timeStamp;
+   linker->whichEnv = theEnv;//
+#endif
 #endif 
 
    for (i = 0; i < linker->bcount; i++) linker->binds[i] = list->binds[i];
@@ -134,9 +146,14 @@ globle struct partialMatch *CreateEmptyPartialMatch(
   void *theEnv)
   {
    struct partialMatch *linker;
-
+#if SLIDING_WINDOW
+   EnterCriticalSection(&(MemoryData(theEnv)->memoSection));
+#endif
    linker = get_struct(theEnv,partialMatch);
-
+#if SLIDING_WINDOW
+   linker->whichEnv = theEnv;
+   LeaveCriticalSection(&(MemoryData(theEnv)->memoSection));
+#endif
    InitializePMLinks(linker);
    linker->betaMemory = TRUE;
    linker->busy = FALSE;
@@ -554,26 +571,53 @@ globle struct partialMatch *MergePartialMatches(
   {
    struct partialMatch *linker;
    static struct partialMatch mergeTemplate = { 1 }; /* betaMemory is TRUE, remainder are 0 or NULL */
-   long long l_time = 0, r_time = 0;
+   long long l_time = 0x3fffffffffff, r_time = 0;
    /*=================================*/
    /* Allocate the new partial match. */
    /*=================================*/
    
+#if SLIDING_WINDOW
+   EnterCriticalSection(&(MemoryData(theEnv)->memoSection));
+#endif
    linker = get_var_struct(theEnv,partialMatch,sizeof(struct genericMatch) * lhsBind->bcount);
+#if SLIDING_WINDOW
+   linker->whichEnv = theEnv;
+   LeaveCriticalSection(&(MemoryData(theEnv)->memoSection));
+#endif
 #if THREAD
    //add by xuchao
-   //if (lhsBind != 0)l_time = lhsBind->timeTag;
+   //if (lhsBind != 0)l_time = lhsBind->timeTag; 
    //if (rhsBind != 0)r_time = rhsBind->timeTag;
    //linker->timeTag = max(l_time, r_time);
+#if SLIDING_WINDOW
+   if (lhsBind != NULL){
+	   l_time = lhsBind->l_timeStamp;
+	   r_time = lhsBind->r_timeStamp;
+   }
+   if (rhsBind != NULL){
+	   //l_time = llmin(l_time, rhsBind->l_timeStamp);
+	   //r_time = llmax(r_time, rhsBind->r_timeStamp);
+	   l_time = (l_time < rhsBind->l_timeStamp ? l_time : rhsBind->l_timeStamp);
+	   r_time = (r_time > rhsBind->r_timeStamp ? r_time : rhsBind->r_timeStamp);
+   }
+   //linker->l_timeStamp = l_time;
+   //linker->r_timeStamp = r_time;
+   /*
+   if (linker->l_timeStamp == 0 || linker->r_timeStamp == 0){
+	   if (lhsBind != NULL)printf("lhs in copy:%lld\n", lhsBind->l_timeStamp);
+	   if (rhsBind != NULL)printf("rhs in copy:%lld\n", rhsBind->r_timeStamp);
+	   printf("merge time error: %lld %lld\n",linker->l_timeStamp,linker->r_timeStamp);
+   }
+   */
+#endif
 #endif
    /*============================================*/
    /* Set the flags to their appropriate values. */
    /*============================================*/
-   
    memcpy(linker,&mergeTemplate,sizeof(struct partialMatch) - sizeof(struct genericMatch));
    
    linker->bcount = (unsigned short) (lhsBind->bcount + 1);
-   
+
    /*========================================================*/
    /* Copy the bindings of the partial match being extended. */
    /*========================================================*/
@@ -583,12 +627,19 @@ globle struct partialMatch *MergePartialMatches(
    /*===================================*/
    /* Add the binding of the rhs match. */
    /*===================================*/
- 
+
    if (rhsBind == NULL)
      { linker->binds[lhsBind->bcount].gm.theValue = NULL; }
    else
      { linker->binds[lhsBind->bcount].gm.theValue = rhsBind->binds[0].gm.theValue; }
-
+#if SLIDING_WINDOW
+   linker->l_timeStamp = l_time;
+   linker->r_timeStamp = r_time;
+   if (linker->l_timeStamp == 0 || linker->r_timeStamp == 0){
+	   printf("generate linker has 0 time\n");
+   }
+   linker->whichEnv = theEnv;
+#endif
    return(linker);
   }
 
@@ -668,14 +719,37 @@ globle struct partialMatch *CreateAlphaMatch(
    /*==================================================*/
    /* Create the alpha match and intialize its values. */
    /*==================================================*/
+#if SLIDING_WINDOW
+   int refCount = 0;
+   for (struct joinNode* listOfJoins = theHeader->entryJoin;
+	   listOfJoins != NULL;
+	   listOfJoins = listOfJoins->rightMatchNode){
+	   refCount += 1;
+   }
+   theHeader->refCount = refCount;
 
-
+   EnterCriticalSection(&(MemoryData(theEnv)->memoSection));
+#endif
    theMatch = get_struct(theEnv,partialMatch);
+#if SLIDING_WINDOW
+   theMatch->whichEnv = theEnv;
+   theMatch->refCount = refCount;
+#endif
    InitializePMLinks(theMatch);
    theMatch->betaMemory = FALSE;
    theMatch->busy = FALSE;
    theMatch->bcount = 1;
    theMatch->hashValue = hashOffset;
+#if SLIDING_WINDOW
+   theMatch->l_timeStamp = ((struct fact *)theEntity)->timestamp;
+   theMatch->r_timeStamp = ((struct fact *)theEntity)->timestamp;
+   if (theMatch->l_timeStamp == 0){
+	   printf("create alpha l_time = 0\n");
+   }
+   if (theMatch->r_timeStamp == 0){
+	   printf("create alpha r_time = 0\n");
+   }
+#endif
 
    afbtemp = get_struct(theEnv,alphaMatch);
    afbtemp->next = NULL;
@@ -729,7 +803,9 @@ globle struct partialMatch *CreateAlphaMatch(
          theHeader->lastHash = theAlphaMemory;
         }
      }
-
+#if SLIDING_WINDOW
+   LeaveCriticalSection(&(MemoryData(theEnv)->memoSection));
+#endif
    /*====================================*/
    /* Store the alpha match in the alpha */
    /* memory of the pattern node.        */
@@ -1050,7 +1126,30 @@ globle struct partialMatch *GetAlphaMemory(
      { return NULL; }
 
    return theAlphaMemory->alphaMemory;
+  } 
+#if SLIDING_WINDOW
+  /*****************************************/
+  /* GetAlphaMemoryHash:  */
+  /*****************************************/
+  globle struct alphaMemoryHash *GetAlphaMemoryHash(
+	  void *theEnv,
+  struct patternNodeHeader *theHeader,
+	  unsigned long hashOffset)
+  {
+	  struct alphaMemoryHash *theAlphaMemory;
+	  unsigned long hashValue;
+
+	  hashValue = AlphaMemoryHashValue(theHeader, hashOffset);
+	  theAlphaMemory = FindAlphaMemory(theEnv, theHeader, hashValue);
+
+	  if (theAlphaMemory == NULL)
+	  {
+		  return NULL;
+	  }
+
+	  return theAlphaMemory;
   }
+#endif
 
 /*****************************************/
 /* GetLeftBetaMemory: Retrieves the list */

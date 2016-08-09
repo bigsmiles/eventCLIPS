@@ -75,6 +75,16 @@ struct partialMatch
    void *owner;
    void *marker;
    void *dependents;
+#if THREAD
+   //add by xuchao
+   long long timeTag;
+#if SLIDING_WINDOW
+   long long l_timeStamp;
+   long long r_timeStamp;
+   void* whichEnv;
+   int refCount;
+#endif
+#endif
    struct partialMatch *nextInMemory;
    struct partialMatch *prevInMemory;
    struct partialMatch *children;
@@ -88,10 +98,7 @@ struct partialMatch
    struct partialMatch *nextBlocked;
    struct partialMatch *prevBlocked;
    struct genericMatch binds[1];
-#if THREAD
-   //add by xuchao
-   long long timeTag;
-#endif
+
   };
 
 /************************************************************/

@@ -74,7 +74,7 @@
    //add by xuchao
    extern struct activeJoinNode *activeNodeHead;
    extern struct activeJoinNode *activeNodeTail;
-   extern CRITICAL_SECTION g_move;
+   extern CRITICAL_SECTION g_move, g_fact_join;
 
 /*************************************************************************/
 /* FactPatternMatch: Implements the core loop for fact pattern matching. */
@@ -91,7 +91,7 @@ globle void FactPatternMatch(
    int offsetSlot;
    DATA_OBJECT theResult;
    struct factPatternNode *tempPtr;
-   
+   int process = 0;
    /*=========================================================*/
    /* If there's nothing left in the pattern network to match */
    /* against, then the current traversal of the pattern      */
@@ -195,7 +195,10 @@ globle void FactPatternMatch(
             if (tempPtr != NULL)
               {
                if (tempPtr->header.stopNode)
-                 { ProcessFactAlphaMatch(theEnv,theFact,markers,tempPtr); }
+                 { 
+				   //printf("Process 1\n"); process += 1;
+				   ProcessFactAlphaMatch(theEnv,theFact,markers,tempPtr); 
+				 }
                
                patternPtr = GetNextFactPatternNode(theEnv,FALSE,tempPtr);
               }
@@ -216,7 +219,10 @@ globle void FactPatternMatch(
             /*=======================================================*/
 
             if (patternPtr->header.stopNode)
-              { ProcessFactAlphaMatch(theEnv,theFact,markers,patternPtr); }
+              { 
+				//printf("Process 1\n"); process += 1;
+				ProcessFactAlphaMatch(theEnv,theFact,markers,patternPtr); 
+			  }
 
             /*===================================*/
             /* Move on to the next pattern node. */
@@ -566,22 +572,51 @@ static void ProcessFactAlphaMatch(
 #if THREAD
   //add by xuchao
   //EnterCriticalSection(&g_move); //remove ok?
+#if SLIDING_WINDOW
+  DATA_OBJECT  arg;
+  EnvGetFactSlot(theEnv, theFact, "timestamp", &arg);
+  if (GetType(arg) == INTEGER){
+	  theFact->timestamp =  DOToLong(arg);
+	  if (theFact->timestamp <= 0){
+		  printf("fact time = 0\n");
+	  }
+  }
+  else{
+	  printf("not timestamp\n");
+  }
+#endif
+  /* move to assert(fact)*/
+  EnterCriticalSection(&g_fact_join);
   struct factNotOnJoinNode **p = &theFact->factNotOnNode;
-  struct factNotOnJoinNode *tail;
+  struct factNotOnJoinNode *tail = NULL;
   //printf("%d %d\n", *p, theFact->factNotOnNode);
+  //printf("fact: %s tail:%d\n", theFact->whichDeftemplate->header.name->contents, tail);
   if (*p == NULL){
 	  *p = (struct factNotOnJoinNode*)malloc(sizeof(struct factNotOnJoinNode));
 	  (*p)->join = NULL; (*p)->next = NULL;
-	  tail = *p;
+	  tail = (struct factNotOnJoinNode*)(*p);
+	  if (tail != *p){
+		  printf(" not equal\n");
+	  }
   }
   else{
-	  tail = *p;
+	  //tail = *p;
+	  tail = (struct factNotOnJoinNode*)(*p);
+	  if (tail != *p){
+		  printf(" not equal 2\n");
+	  }
+	  struct factNotOnJoinNode* tmp = tail;
+	  int cnt = 0;
+	  struct factNotOnJoinNode* tmp1 = tmp->next;
+	  struct factNotOnJoinNode* tmp2 = tail->next;
+	  //printf("here!\n");
 	  while (tail->next != NULL){
+		  cnt += 1;
 		  tail = tail->next;
 	  }
   }
-
-  //printf("fact: %s\n", theFact->whichDeftemplate->header.name->contents);
+  //printf("aftern new factNotOnJoinNode: %d %d\n", *p, theFact->factNotOnNode);
+  //printf("fact: %s tail:%d\n", theFact->whichDeftemplate->header.name->contents,tail);
   for (listOfJoins = thePattern->header.entryJoin;
 	  listOfJoins != NULL;
 	  listOfJoins = listOfJoins->rightMatchNode)
@@ -591,9 +626,11 @@ static void ProcessFactAlphaMatch(
 	  one->join = listOfJoins;
 	  one->next = NULL;
 	  tail->next = one;
-	  tail = tail->next;
+	  //tail = tail->next;
+	  tail = one;
   }
-
+  LeaveCriticalSection(&g_fact_join);
+  //move to assert(fact)
   /*struct factNotOnJoinNode **p = &theFact->factNotOnNode;
   *p = (struct factNotOnJoinNode*)malloc(sizeof(struct factNotOnJoinNode));
   (*p)->join = NULL; (*p)->next = NULL;

@@ -40,7 +40,8 @@ struct JoinNodeList *joinNodeListTail;
 
 extern struct activeJoinNode *activeNodeHead;
 extern struct activeJoinNode *activeNodeTail;
-extern CRITICAL_SECTION g_cs,g_move;
+extern CRITICAL_SECTION g_cs, g_move;
+extern CRITICAL_SECTION g_fact_join;
 extern HANDLE  g_hSemaphoreBuffer, g_hSemaphoreBufferOfThread1, g_hSemaphoreBufferOfThread2;
 
 extern LARGE_INTEGER search_time1, search_time2;
@@ -733,9 +734,11 @@ unsigned int __stdcall MoveOnJoinNetworkThread(void *pM)
 
 			currentPartialMatch = CreateAlphaMatch(GetEnvironmentByIndex(1), theFact, theMarks, theHeader, currentActiveNode->hashOffset);
 			LeaveCriticalSection(&g_move);
+
 			currentPartialMatch->owner = theHeader;
 #if THREAD 1
 			//EnterCriticalSection(&g_move); // remove by xuchao , remove ok?
+			EnterCriticalSection(&g_fact_join);
 			struct factNotOnJoinNode *p = theFact->factNotOnNode;
 			while (p->next != NULL){
 				if (p->next->join == currentJoinNode){
@@ -746,6 +749,7 @@ unsigned int __stdcall MoveOnJoinNetworkThread(void *pM)
 				}
 				p = p->next;
 			}
+			LeaveCriticalSection(&g_fact_join);
 			//LeaveCriticalSection(&g_move);
 #endif
 		    ((struct patternMatch *)theFact->list)->theMatch = currentPartialMatch;

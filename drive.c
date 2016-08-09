@@ -73,7 +73,11 @@
 
    //add by xuchao
    extern CRITICAL_SECTION g_runDebug;
-   extern CRITICAL_SECTION g_move;
+   extern CRITICAL_SECTION g_move; 
+#if SLIDING_WINDOW
+#define WINDOW_SIZE 2
+#define FREEPM 1
+#endif
 /************************************************/
 /* NetworkAssert: Primary routine for filtering */
 /*   a partial match through the join network.  */
@@ -184,6 +188,53 @@ globle void NetworkAssertRight(
    while (lhsBinds != NULL)
      {
       nextBind = lhsBinds->nextInMemory;
+#if SLIDING_WINDOW
+	 
+	  long long lhsBinds_l_time = lhsBinds->l_timeStamp;
+	  long long lhsBinds_r_time = lhsBinds->r_timeStamp;
+	  long long fix_l_time = rhsBinds->r_timeStamp - WINDOW_SIZE;
+	  long long fix_r_time = rhsBinds->l_timeStamp + WINDOW_SIZE;
+	  long long rhsBinds_l_time = rhsBinds->l_timeStamp;
+	  long long rhsBinds_r_time = rhsBinds->r_timeStamp;
+	  //printf("lhs: %lld %lld\n", lhsBinds_l_time, lhsBinds_r_time);
+	  /*
+	  if (lhsBinds_l_time == 0){
+		  printf("time = 0\n");
+	  }
+	  */
+	  //printf("rhs: %lld %lld\n", rhsBinds_l_time, rhsBinds_r_time);
+	  //printf("%lld and %lld \n", llabs(lhsBinds_r_time - rhsBinds_l_time), llabs(lhsBinds_l_time - rhsBinds_r_time));
+	  //超出窗口的lhsBinds,只有超出窗口且lhsBinds在左面，就是小于rhsBinds一个窗口的才被free
+	  if ((lhsBinds_r_time < fix_l_time) || (lhsBinds_r_time > fix_r_time))
+	  //if (llabs(lhsBinds_l_time - rhsBinds_r_time) > WINDOW_SIZE || llabs(lhsBinds_r_time - rhsBinds_l_time) > WINDOW_SIZE)
+	  {
+		  //printf("over window size\n");
+		  struct partialMatch* tmp = lhsBinds;
+		  struct partialMatch* pre = lhsBinds->prevInMemory;
+		  lhsBinds = nextBind;
+		  //free this PM tmp;
+		  /**/
+#if FREEPM
+		  if (lhsBinds_r_time > rhsBinds_l_time)continue;
+		  if (pre != NULL){
+			  pre->nextInMemory = lhsBinds;
+			  if(lhsBinds != NULL)
+				lhsBinds->prevInMemory = pre;
+		  }
+		  else{
+			  join->leftMemory->beta[tmp->hashValue % join->leftMemory->size] = lhsBinds;
+			  if(lhsBinds != NULL)
+				  lhsBinds->prevInMemory = pre; //NULL
+		  }
+		  EnterCriticalSection(&(MemoryData(tmp->whichEnv)->memoSection));
+		  //rtn_struct(tmp->whichEnv, partialMatch, tmp);
+		  rtn_var_struct(tmp->whichEnv, partialMatch, (int) sizeof(struct genericMatch*) * (tmp->bcount - 1), tmp);
+		  LeaveCriticalSection(&(MemoryData(tmp->whichEnv)->memoSection));
+#endif
+		  /**/
+		  continue;
+	  }
+#endif
       join->memoryCompares++;
       
       /*===========================================================*/
@@ -333,6 +384,9 @@ globle void NetworkAssertLeft(
    struct partialMatch *oldRHSBinds = NULL;
    struct joinNode *oldJoin = NULL;
    int rhsBindsIsFact = FALSE;
+#if SLIDING_WINDOW
+   struct alphaMemoryHash *alphaHash;
+#endif
 
    /*=========================================================*/
    /* If an incremental reset is being performed and the join */
@@ -358,7 +412,12 @@ globle void NetworkAssertLeft(
 	   LARGE_INTEGER large_time;
 	   QueryPerformanceCounter(&large_time);
 	   long long time = (long long)large_time.QuadPart;
-	   printf("%s %d %lld\n", join->ruleToActivate->header.name->contents,join->ruleToActivate->salience,time );
+	   long long l_time = 0,r_time = 0;
+#if SLIDING_WINDOW
+	   l_time = lhsBinds->l_timeStamp;
+	   r_time = lhsBinds->r_timeStamp;
+#endif
+	   printf("%s %d %lld  %lld %lld\n", join->ruleToActivate->header.name->contents,join->ruleToActivate->salience,time,l_time,r_time);
 	   LeaveCriticalSection(&g_runDebug);
 	   /*
 	   AddActivation(theEnv, EnvFindDefrule(theEnv, EnvGetDefruleName(GetEnvironmentByIndex(0), join->ruleToActivate)), lhsBinds);
@@ -388,6 +447,9 @@ globle void NetworkAssertLeft(
    else
    {
 	   rhsBinds = GetAlphaMemory(GetEnvironmentByIndex(1), (struct patternNodeHeader *) join->rightSideEntryStructure, entryHashValue);
+#if SLIDING_WINDOW
+	   alphaHash = GetAlphaMemoryHash(GetEnvironmentByIndex(1), (struct patternNodeHeader *) join->rightSideEntryStructure, entryHashValue);
+#endif
 	   //rhsBinds = GetAlphaMemory(theEnv, (struct patternNodeHeader *) join->rightSideEntryStructure, entryHashValue); 
 #if THREAD
 	   //add by xuchao
@@ -446,6 +508,55 @@ globle void NetworkAssertLeft(
 			  
 		   }
 		   //LeaveCriticalSection(&g_move);
+#if SLIDING_WINDOW
+		   long long factTime = curFact->timestamp;
+		   long long l_time = lhsBinds->l_timeStamp;
+		   long long r_time = lhsBinds->r_timeStamp;
+		   if (llabs(factTime - l_time) > WINDOW_SIZE || llabs(r_time - factTime) > WINDOW_SIZE){
+			   
+			   struct partialMatch* tmp = rhsBinds;
+			   struct partialMatch* pre = rhsBinds->prevInMemory;
+			   rhsBinds = rhsBinds->nextInMemory;
+			   //free this PM tmp;
+			   /**/
+#if FREEPM  
+			  
+			   if (factTime > r_time) continue;
+			   EnterCriticalSection(&(MemoryData(tmp->whichEnv)->memoSection));
+			   tmp->refCount -= 1;
+			   if (tmp->refCount >= 0){
+				   LeaveCriticalSection(&(MemoryData(tmp->whichEnv)->memoSection));
+				   continue;
+			   }
+			   // else free tmp to memory pool
+			   //printf("going to free\n");
+			   if (pre != NULL){
+				   pre->nextInMemory = rhsBinds;
+				   if (rhsBinds != NULL)
+					   rhsBinds->prevInMemory = pre;
+				   else
+					   alphaHash->endOfQueue = pre;
+			   }
+			   else{
+				   if (alphaHash != NULL){
+					   //printf("NULL alpha\n");
+					   alphaHash->alphaMemory = rhsBinds;
+					   //alphaHash->endOfQueue = rhsBinds;
+				   }
+				   if (rhsBinds != NULL)
+					   rhsBinds->prevInMemory = pre;//NULL
+				   else
+					   alphaHash->endOfQueue = pre;
+			   }
+			   //EnterCriticalSection(&(MemoryData(tmp->whichEnv)->memoSection));
+			   rtn_var_struct(tmp->whichEnv, partialMatch, (int) sizeof(struct genericMatch*) * (tmp->bcount - 1), tmp);
+			   LeaveCriticalSection(&(MemoryData(tmp->whichEnv)->memoSection));
+#endif
+			   /**/
+
+			   continue;
+		   }
+#endif
 		   if (flag){
 			   rhsBinds = rhsBinds->nextInMemory;
 			   continue;
@@ -952,7 +1063,9 @@ globle void PPDrive(
 #if !THREAD
 	  //remove by xuchao
       UpdateBetaPMLinks(theEnv,linker,lhsBinds,rhsBinds,listOfJoins->join,hashValue,listOfJoins->enterDirection);
+	 
 #endif    
+
       if (listOfJoins->enterDirection == LHS)
         { 
 #if !THREAD

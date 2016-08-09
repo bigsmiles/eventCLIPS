@@ -67,7 +67,7 @@ void EnvUserFunctions(void *);
 //void *betaEnv;
 CRITICAL_SECTION g_cs;
 //CRITICAL_SECTION g_debug; //解决同步问题?
-CRITICAL_SECTION g_csDebug, g_runDebug,g_move;//g_csDebug1, g_csDebug2,
+CRITICAL_SECTION g_csDebug, g_runDebug, g_move,g_fact_join;//g_csDebug1, g_csDebug2,
 HANDLE g_debug;
 HANDLE g_hSemaphoreBuffer,g_hSemaphoreBufferOfThread1, g_hSemaphoreBufferOfThread2;
 extern int totalAddActiveNode,totalGetActiveNode;
@@ -77,6 +77,17 @@ long long search_time = 0;
 
 #endif
 
+char* Generat_Event_On_Fix_Rate(){
+	int count = 10000;
+	while (count--){
+		char* res = malloc(100 * sizeof(char));
+		int id = rand() % 200;
+		LARGE_INTEGER time_stamp;
+		QueryPerformanceCounter(&time_stamp);
+		sprintf(res, "(stock%d (price%d %d)(timestamp %lld))", id,id,rand()%200,time_stamp.QuadPart);
+	}
+	return NULL;
+}
 
 
 int main(
@@ -97,6 +108,7 @@ int main(
 	InitializeCriticalSectionAndSpinCount(&g_cs,0x00000400);
 	InitializeCriticalSectionAndSpinCount(&g_move,0x00000400);
 	InitializeCriticalSectionAndSpinCount(&g_runDebug, 0x00000400);
+	InitializeCriticalSectionAndSpinCount(&g_fact_join, 0x00000400);
 
 #if !MUTILTHREAD
 	g_hSemaphoreBuffer = CreateSemaphore(NULL, 0, 30000000, NULL);
@@ -117,15 +129,24 @@ int main(
 #endif
 	
 
-	EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
+	//EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
 	//EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
+	//EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_window.clp");
+	EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_723.clp");
+
 #if THREAD || REALMTHREAD
-	EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
+	//EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
 	//EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
-	EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
+	//EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_window.clp");
+	EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_723.clp");
+	//EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
 	//EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
-	EnvLoad(fourEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
+	//EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_window.clp");
+	EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_723.clp");
+	//EnvLoad(fourEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
 	//EnvLoad(fourEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
+	//EnvLoad(fourEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_window.clp");
+	EnvLoad(fourEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_723.clp");
 
 	struct ThreadNode *env1 = (struct ThreadNode*)malloc(sizeof(struct ThreadNode));
 	env1->theEnv = betaEnv; env1->threadTag = 0;
@@ -141,10 +162,10 @@ int main(
 #if THREAD
 	//add by xuchao,start this execute thread
 #if MUTILTHREAD || REALMTHREAD
-	hThread = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env1, 0, NULL);
-	SetThreadAffinityMask(hThread, 1 << 1);//线程指定在某个cpu运行
-	hThread1 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env2, 0, NULL);
-	SetThreadAffinityMask(hThread1, 1 << 2);//线程指定在某个cpu运行
+	//hThread = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env1, 0, NULL);
+	//SetThreadAffinityMask(hThread, 1 << 1);//线程指定在某个cpu运行
+	//hThread1 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env2, 0, NULL);
+	//SetThreadAffinityMask(hThread1, 1 << 2);//线程指定在某个cpu运行
 	//hThread2 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env3, 0, NULL);
 	//SetThreadAffinityMask(hThread2, 1 << 3);//线程指定在某个cpu运行
 #else if
@@ -162,11 +183,13 @@ int main(
 	//EnvAssertString(theEnv, "(student (id 100)(name \"tom\"))");
 	
 
-	FILE *pFile = fopen("D:\\VS\\stdCLIPS\\Debug\\CLIPSFact.txt", "r");
+	//FILE *pFile = fopen("D:\\VS\\stdCLIPS\\Debug\\CLIPSFact.txt", "r");
 	//FILE *pFile = fopen("D:\\VS\\stdCLIPS\\Debug\\facts.txt", "r");
+	//FILE *pFile = fopen("D:\\VS\\stdCLIPS\\Debug\\CLIPSFact_window_d.txt", "r");
+	FILE *pFile = fopen("D:\\VS\\stdCLIPS\\Debug\\CLIPSFact_723.txt", "r");
 	
 	if (pFile == NULL)
-		printf("error!\n");
+		printf("file error!\n");
 	char tmpBuffer[200];
 	total = 0;
 	int tmpBufferLenth = 0;
@@ -179,7 +202,9 @@ int main(
 	//DWORD start = GetTickCount();
 	QueryPerformanceCounter(&start);
 	printf("time: 0  %lld\n", start.QuadPart);
+	long long line_count = 0;
 	while (fgets(tmpBuffer, 100, pFile))
+	//while (line_count--)
 	{
 		
 #if DEBUGTIME
@@ -194,15 +219,33 @@ int main(
 		}
 		strcat(tmpBuffer, timeStr);
 #else if
+		/*
+		QueryPerformanceCounter(&large_time);
+		tmpBuffer[strlen(tmpBuffer) - 1] = '\0';
+		sprintf(timeStr, "(timestamp %lld))",large_time.QuadPart);
+		strcat(tmpBuffer, timeStr);
+		*/
+		//QueryPerformanceCounter(&large_time);
+		//int id = rand() % 200;
+		//sprintf(tmpBuffer,"(stock%d(price%d %d)(timestamp %lld))",id,id,rand()%100,large_time.QuadPart);
 		
 #endif
+		//printf("%s\n", tmpBuffer); break;
 		EnvAssertString(theEnv, tmpBuffer);
+		//if (line_count++ > 200000)break;
+		
 	} 
 	QueryPerformanceCounter(&end);
-	 
-	Sleep(100000);
+	printf("time over %lld ,total: %lld,line_count %lld\n", end.QuadPart, (end.QuadPart - start.QuadPart) / freq.QuadPart,line_count);
+	hThread = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env1, 0, NULL);
+	SetThreadAffinityMask(hThread, 1 << 1);//线程指定在某个cpu运行
+	//hThread1 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env2, 0, NULL);
+	//SetThreadAffinityMask(hThread1, 1 << 2);//线程指定在某个cpu运行
+	//hThread2 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env3, 0, NULL);
+	//SetThreadAffinityMask(hThread2, 1 << 3);//线程指定在某个cpu运行
+	Sleep(355000);
 	//CommandLoop(theEnv);
-#if !THREAD
+#if !THREAD 
 	CommandLoop(theEnv);
 #endif
 	QueryPerformanceCounter(&finish);

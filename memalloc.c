@@ -76,6 +76,9 @@ globle void InitializeMemory(
    AllocateEnvironmentData(theEnv,MEMORY_DATA,sizeof(struct memoryData),NULL);
 
    MemoryData(theEnv)->OutOfMemoryFunction = DefaultOutOfMemoryFunction;
+#if SLIDING_WINDOW
+   InitializeCriticalSectionAndSpinCount(&(MemoryData(theEnv)->memoSection), 0x00000400);
+#endif
    
    MemoryData(theEnv)->MemoryTable = (struct memoryPtr **)
                  malloc((STD_SIZE) (sizeof(struct memoryPtr *) * MEM_TABLE_SIZE));
