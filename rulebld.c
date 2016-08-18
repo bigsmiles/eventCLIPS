@@ -606,7 +606,11 @@ static struct joinNode *CreateNewJoin(
 	   newJoin->activeJoinNodeListTail = newJoin->activeJoinNodeListHead;
 	   newJoin->numOfActiveNode = 0;
 #if CSECTION
+#if SPINCOUNT
 	   InitializeCriticalSectionAndSpinCount(&(newJoin->nodeSection), 0x00000400);
+#else if
+	   InitializeCriticalSection(&(newJoin->nodeSection));
+#endif
 #endif
 #if MUTILTHREAD
 	   newJoin->threadTag = newJoin->nodeMaxSalience % 2;
@@ -640,6 +644,12 @@ static struct joinNode *CreateNewJoin(
          newJoin->leftMemory = get_struct(theEnv,betaMemory); 
          newJoin->leftMemory->beta = (struct partialMatch **) genalloc(theEnv,sizeof(struct partialMatch *));
          newJoin->leftMemory->beta[0] = NULL;
+#if SLIDING_WINDOW
+		 //newJoin->leftMemory->beta_last = (struct partialMatch**) genalloc(theEnv, sizeof(struct partialMatch*));
+		 //newJoin->leftMemory->beta_last[0] = NULL;
+		 newJoin->leftMemory->beta_last = (struct partialMatch **) genalloc(theEnv, sizeof(struct partialMatch *) * INITIAL_BETA_HASH_SIZE);
+		 memset(newJoin->leftMemory->beta_last, 0, sizeof(struct partialMatch *) * INITIAL_BETA_HASH_SIZE);
+#endif
          newJoin->leftMemory->size = 1;
          newJoin->leftMemory->count = 0;
          }
@@ -648,6 +658,10 @@ static struct joinNode *CreateNewJoin(
          newJoin->leftMemory = get_struct(theEnv,betaMemory); 
          newJoin->leftMemory->beta = (struct partialMatch **) genalloc(theEnv,sizeof(struct partialMatch *) * INITIAL_BETA_HASH_SIZE);
          memset(newJoin->leftMemory->beta,0,sizeof(struct partialMatch *) * INITIAL_BETA_HASH_SIZE);
+#if SLIDING_WINDOW
+		 newJoin->leftMemory->beta_last = (struct partialMatch **) genalloc(theEnv, sizeof(struct partialMatch *) * INITIAL_BETA_HASH_SIZE);
+		 memset(newJoin->leftMemory->beta_last, 0, sizeof(struct partialMatch *) * INITIAL_BETA_HASH_SIZE);
+#endif
          newJoin->leftMemory->size = INITIAL_BETA_HASH_SIZE;
          newJoin->leftMemory->count = 0;
         }
@@ -662,12 +676,25 @@ static struct joinNode *CreateNewJoin(
       if ((lhsEntryStruct == NULL) && (existsRHSPattern || negatedRHSPattern || joinFromTheRight))
         {
          newJoin->leftMemory->beta[0] = CreateEmptyPartialMatch(theEnv); 
+#if SLIDING_WINDOW
+		 newJoin->leftMemory->beta[0]->rhsMemory = FALSE;
+		 newJoin->leftMemory->beta_last[0] = newJoin->leftMemory->beta[0];
+#endif
          newJoin->leftMemory->beta[0]->owner = newJoin;
          newJoin->leftMemory->count = 1;
         }
+
+#if £¡SLIDING_WINDOW
+	  newJoin->leftMemory->beta_last = (struct partialMatch**) genalloc(theEnv, sizeof(struct partialMatch*) * newJoin->leftMemory->size);
+	  newJoin->leftMemory->beta_last[0] = NULL;
+	  memset(newJoin->leftMemory->beta_last, 0, sizeof(struct partialMatch *) * newJoin->leftMemory->size);
+#endif
+
      }
    else
      { newJoin->leftMemory = NULL; }
+
+
      
    if (joinFromTheRight)
      {
@@ -676,6 +703,7 @@ static struct joinNode *CreateNewJoin(
          newJoin->rightMemory = get_struct(theEnv,betaMemory); 
          newJoin->rightMemory->beta = (struct partialMatch **) genalloc(theEnv,sizeof(struct partialMatch *));
          newJoin->rightMemory->last = (struct partialMatch **) genalloc(theEnv,sizeof(struct partialMatch *));
+
          newJoin->rightMemory->beta[0] = NULL;
          newJoin->rightMemory->last[0] = NULL;
          newJoin->rightMemory->size = 1;
@@ -686,6 +714,7 @@ static struct joinNode *CreateNewJoin(
          newJoin->rightMemory = get_struct(theEnv,betaMemory); 
          newJoin->rightMemory->beta = (struct partialMatch **) genalloc(theEnv,sizeof(struct partialMatch *) * INITIAL_BETA_HASH_SIZE);
          newJoin->rightMemory->last = (struct partialMatch **) genalloc(theEnv,sizeof(struct partialMatch *) * INITIAL_BETA_HASH_SIZE);
+
          memset(newJoin->rightMemory->beta,0,sizeof(struct partialMatch *) * INITIAL_BETA_HASH_SIZE);
          memset(newJoin->rightMemory->last,0,sizeof(struct partialMatch *) * INITIAL_BETA_HASH_SIZE);
          newJoin->rightMemory->size = INITIAL_BETA_HASH_SIZE;

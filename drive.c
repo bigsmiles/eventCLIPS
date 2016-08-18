@@ -74,8 +74,10 @@
    //add by xuchao
    extern CRITICAL_SECTION g_runDebug;
    extern CRITICAL_SECTION g_move; 
+   extern long long search_time;
+   extern long long cur_partialmatch_time[3];
 #if SLIDING_WINDOW
-#define WINDOW_SIZE 2
+#define WINDOW_SIZE 20000
 #define FREEPM 1
 #endif
 /************************************************/
@@ -205,7 +207,7 @@ globle void NetworkAssertRight(
 	  //printf("rhs: %lld %lld\n", rhsBinds_l_time, rhsBinds_r_time);
 	  //printf("%lld and %lld \n", llabs(lhsBinds_r_time - rhsBinds_l_time), llabs(lhsBinds_l_time - rhsBinds_r_time));
 	  //超出窗口的lhsBinds,只有超出窗口且lhsBinds在左面，就是小于rhsBinds一个窗口的才被free
-	  if ((lhsBinds_r_time < fix_l_time) || (lhsBinds_r_time > fix_r_time))
+	  if ((lhsBinds_l_time < fix_l_time) || (lhsBinds_r_time > fix_r_time))
 	  //if (llabs(lhsBinds_l_time - rhsBinds_r_time) > WINDOW_SIZE || llabs(lhsBinds_r_time - rhsBinds_l_time) > WINDOW_SIZE)
 	  {
 		  //printf("over window size\n");
@@ -215,19 +217,29 @@ globle void NetworkAssertRight(
 		  //free this PM tmp;
 		  /**/
 #if FREEPM
-		  if (lhsBinds_r_time > rhsBinds_l_time)continue;
+		  //if (lhsBinds_r_time > fix_r_time)break; //add 8-10
+		  //if (lhsBinds_r_time > rhsBinds_l_time)continue;
+		  if (lhsBinds_r_time > fix_l_time) continue;
 		  if (pre != NULL){
 			  pre->nextInMemory = lhsBinds;
-			  if(lhsBinds != NULL)
-				lhsBinds->prevInMemory = pre;
+			  if (lhsBinds != NULL){
+				  lhsBinds->prevInMemory = pre;
+			  }
+			  else{
+				  join->leftMemory->beta_last[tmp->hashValue % join->leftMemory->size] = pre;
+			  }
 		  }
 		  else{
 			  join->leftMemory->beta[tmp->hashValue % join->leftMemory->size] = lhsBinds;
 			  if(lhsBinds != NULL)
 				  lhsBinds->prevInMemory = pre; //NULL
+			  else{
+				  join->leftMemory->beta_last[tmp->hashValue % join->leftMemory->size] = lhsBinds;
+			  }
 		  }
 		  EnterCriticalSection(&(MemoryData(tmp->whichEnv)->memoSection));
 		  //rtn_struct(tmp->whichEnv, partialMatch, tmp);
+		  //printf("free inright\n");
 		  rtn_var_struct(tmp->whichEnv, partialMatch, (int) sizeof(struct genericMatch*) * (tmp->bcount - 1), tmp);
 		  LeaveCriticalSection(&(MemoryData(tmp->whichEnv)->memoSection));
 #endif
@@ -417,6 +429,7 @@ globle void NetworkAssertLeft(
 	   l_time = lhsBinds->l_timeStamp;
 	   r_time = lhsBinds->r_timeStamp;
 #endif
+	   search_time = time;
 	   printf("%s %d %lld  %lld %lld\n", join->ruleToActivate->header.name->contents,join->ruleToActivate->salience,time,l_time,r_time);
 	   LeaveCriticalSection(&g_runDebug);
 	   /*
@@ -487,7 +500,7 @@ globle void NetworkAssertLeft(
 
    //add by xuchao for REALMTHREA
    //printf("leftrhs: %d %d %d\n", rhsBindsIsFact,rhsBindsIsFact, rhsBinds == NULL ? 0 : 1);
-
+   int garbegeRef = FALSE;
    while (rhsBinds != NULL)
      {
 
@@ -512,7 +525,11 @@ globle void NetworkAssertLeft(
 		   long long factTime = curFact->timestamp;
 		   long long l_time = lhsBinds->l_timeStamp;
 		   long long r_time = lhsBinds->r_timeStamp;
-		   if (llabs(factTime - l_time) > WINDOW_SIZE || llabs(r_time - factTime) > WINDOW_SIZE){
+		   long long fix_l_time = r_time - WINDOW_SIZE;
+		   long long fix_r_time = l_time + WINDOW_SIZE;
+		   //if (llabs(factTime - l_time) > WINDOW_SIZE || llabs(r_time - factTime) > WINDOW_SIZE)
+		   if (factTime < fix_l_time || factTime > fix_r_time)
+		   {
 			   
 			   struct partialMatch* tmp = rhsBinds;
 			   struct partialMatch* pre = rhsBinds->prevInMemory;
@@ -521,23 +538,95 @@ globle void NetworkAssertLeft(
 			   /**/
 #if FREEPM  
 			  
-			   if (factTime > r_time) continue;
+			   //if (factTime > r_time) 
+			   int useable = TRUE;
+			   long long may_be_min_time = l_time;
+			   struct partialMatch* left_memory = GetLeftBetaMemory(join, lhsBinds->hashValue);
+			   if (left_memory != NULL) may_be_min_time = min(may_be_min_time, left_memory->l_timeStamp);
+			   EnterCriticalSection(&join->nodeSection);
+			   if (join->numOfActiveNode > 0 && join->activeJoinNodeListHead->next->currentPartialMatch != NULL){
+				   may_be_min_time = min(may_be_min_time, join->activeJoinNodeListHead->next->currentPartialMatch->l_timeStamp);
+			   }
+			   if (join->numOfActiveNode > 0 && join->activeJoinNodeListHead->next->currentPartialMatch == NULL){
+				   may_be_min_time = min(may_be_min_time, ((struct fact*)(join->activeJoinNodeListHead->next->theEntity))->timestamp);
+			   }
+			   if (join->numOfActiveNode > 0 && join->activeJoinNodeListTail->currentPartialMatch != NULL)
+				   may_be_min_time = min(may_be_min_time, join->activeJoinNodeListTail->currentPartialMatch->l_timeStamp);
+			   
+			   LeaveCriticalSection(&join->nodeSection);
+			   struct joinNode* last_level_join = join->lastLevel;
+			   //struct joinNode* last_level_join = join;
+			   /**/
+			   long long x_alpha = 9999999999999;
+			   while (last_level_join)
+			   {
+				   unsigned long hashoff = entryHashValue;
+				   //unsigned long hashoff = ComputeRightHashValue(GetEnvironmentByIndex(1), (struct patternNodeHeader *) last_level_join->rightSideEntryStructure);
+				   struct partialMatch* x_PM  = GetAlphaMemory(GetEnvironmentByIndex(1), (struct patternNodeHeader *) last_level_join->rightSideEntryStructure, hashoff);
+				   x_alpha = 9999999999999;
+				   if(x_PM != NULL) x_alpha= x_PM->l_timeStamp;
+				   long long x_beta = 9999999999999;
+				   EnterCriticalSection(&last_level_join->nodeSection);
+				   //if (last_level_join->threadTag == -1)
+				   {
+					   may_be_min_time = min(may_be_min_time, (min(cur_partialmatch_time[1], cur_partialmatch_time[2])));
+				   }
+				   if (/*last_level_join->threadTag != -1 && */last_level_join->numOfActiveNode > 0){
+					   if (last_level_join->activeJoinNodeListHead->next->currentPartialMatch != NULL)
+						   x_beta = last_level_join->activeJoinNodeListHead->next->currentPartialMatch->l_timeStamp;
+					   else
+						   x_beta = ((struct fact*)(last_level_join->activeJoinNodeListHead->next->theEntity))->timestamp;
+					   
+				   }
+				   LeaveCriticalSection(&last_level_join->nodeSection);
+				   may_be_min_time = min(may_be_min_time, min(x_alpha,x_beta));
+				   last_level_join = last_level_join->lastLevel;
+			   }
+			   /**/
+			 
+			   //if (factTime > fix_l_time)
+			   if (factTime > may_be_min_time - WINDOW_SIZE)
+			   //if (factTime > l_time - WINDOW_SIZE)
+			   {
+				   //break; 
+				   continue; 
+			   }
 			   EnterCriticalSection(&(MemoryData(tmp->whichEnv)->memoSection));
-			   tmp->refCount -= 1;
-			   if (tmp->refCount >= 0){
+			   /**/
+			   int mask = 0;
+			   struct patternNodeHeader* theHeader = (struct patternNodeHeader *) join->rightSideEntryStructure;
+			   for (struct joinNode* listOfJoins = theHeader->entryJoin;
+				   listOfJoins != NULL;
+				   listOfJoins = listOfJoins->rightMatchNode){
+				   
+				   if (listOfJoins == join)break;
+				   mask += 1;
+			   }
+			   if (tmp->refMask & (1<<mask)){
+				   tmp->refCount -= 1;
+				   tmp->refMask &= ~(1 << mask);
+			   }
+			   if (tmp->refCount > 0)
+			   {
 				   LeaveCriticalSection(&(MemoryData(tmp->whichEnv)->memoSection));
 				   continue;
 			   }
+			   /**/
 			   // else free tmp to memory pool
 			   //printf("going to free\n");
+			   //printf("may_be_min_time:%lld\n", may_be_min_time);
 			   if (pre != NULL){
+				   /**/
 				   pre->nextInMemory = rhsBinds;
 				   if (rhsBinds != NULL)
 					   rhsBinds->prevInMemory = pre;
 				   else
 					   alphaHash->endOfQueue = pre;
+					  /* */
 			   }
-			   else{
+			   else
+			   {
+				   /**/
 				   if (alphaHash != NULL){
 					   //printf("NULL alpha\n");
 					   alphaHash->alphaMemory = rhsBinds;
@@ -545,12 +634,16 @@ globle void NetworkAssertLeft(
 				   }
 				   if (rhsBinds != NULL)
 					   rhsBinds->prevInMemory = pre;//NULL
-				   else
+				   //else
 					   alphaHash->endOfQueue = pre;
+				  /**/
+					   
 			   }
 			   //EnterCriticalSection(&(MemoryData(tmp->whichEnv)->memoSection));
+			   //printf("free memory %d %lld %lld %lld\n",join->depth,x_alpha,tmp->l_timeStamp,tmp->r_timeStamp);
 			   rtn_var_struct(tmp->whichEnv, partialMatch, (int) sizeof(struct genericMatch*) * (tmp->bcount - 1), tmp);
 			   LeaveCriticalSection(&(MemoryData(tmp->whichEnv)->memoSection));
+			   
 #endif
 			   /**/
 
