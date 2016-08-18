@@ -83,6 +83,7 @@ struct partialMatch
    long long r_timeStamp;
    void* whichEnv;
    int refCount;
+   long long refMask;
 #endif
 #endif
    struct partialMatch *nextInMemory;

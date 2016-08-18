@@ -379,6 +379,10 @@ globle void AddBetaMemoriesToJoin(
          theNode->leftMemory = get_struct(theEnv,betaMemory); 
          theNode->leftMemory->beta = (struct partialMatch **) genalloc(theEnv,sizeof(struct partialMatch *));
          theNode->leftMemory->beta[0] = NULL;
+#if SLIDING_WINDOW
+		 theNode->leftMemory->beta_last = (struct partialMatch **) genalloc(theEnv,sizeof(struct partialMatch *));
+		 theNode->leftMemory->beta_last[0] = NULL;
+#endif
          theNode->leftMemory->size = 1;
          theNode->leftMemory->count = 0;
          theNode->leftMemory->last = NULL;
@@ -388,6 +392,10 @@ globle void AddBetaMemoriesToJoin(
          theNode->leftMemory = get_struct(theEnv,betaMemory); 
          theNode->leftMemory->beta = (struct partialMatch **) genalloc(theEnv,sizeof(struct partialMatch *) * INITIAL_BETA_HASH_SIZE);
          memset(theNode->leftMemory->beta,0,sizeof(struct partialMatch *) * INITIAL_BETA_HASH_SIZE);
+#if SLIDING_WINDOW
+		 theNode->leftMemory->beta_last = (struct partialMatch **) genalloc(theEnv, sizeof(struct partialMatch *) * INITIAL_BETA_HASH_SIZE);
+		 memset(theNode->leftMemory->beta_last, 0, sizeof(struct partialMatch *) * INITIAL_BETA_HASH_SIZE);
+#endif
          theNode->leftMemory->size = INITIAL_BETA_HASH_SIZE;
          theNode->leftMemory->count = 0;
          theNode->leftMemory->last = NULL;

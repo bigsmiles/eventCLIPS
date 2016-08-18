@@ -223,13 +223,60 @@ globle void UpdateBetaPMLinks(
    
    if (side == LHS)
      {
+	   /**
       thePM->nextInMemory = theMemory->beta[betaLocation];
       if (theMemory->beta[betaLocation] != NULL)
         { theMemory->beta[betaLocation]->prevInMemory = thePM; }
       theMemory->beta[betaLocation] = thePM;
+	
+	  **/
+	   /**/
+	   if (theMemory->beta_last[betaLocation] != NULL)
+	   //if (theMemory->beta[betaLocation] != NULL)
+	   {
+		   theMemory->beta_last[betaLocation]->nextInMemory = thePM;
+		   thePM->prevInMemory = theMemory->beta_last[betaLocation];
+	   }
+	   else{ theMemory->beta[betaLocation] = thePM; }
+
+	   theMemory->beta_last[betaLocation] = thePM; thePM->nextInMemory = NULL;
+	   /**/
+	   /**
+	   struct partialMatch *p = theMemory->beta[betaLocation];
+	   thePM->nextInMemory = NULL; thePM->prevInMemory = NULL;
+	   if (theMemory->beta[betaLocation] != NULL){
+		   int cnt = 0;
+		   while (p->nextInMemory != NULL ){//&& p->l_timeStamp <= thePM->l_timeStamp){
+			   p = p->nextInMemory;
+			   if (cnt++ > 50000){
+				   printf("50000\n"); break;
+			   }
+		   }
+		   if (p->nextInMemory == NULL){
+			   p->nextInMemory = thePM;
+			   thePM->prevInMemory = p;
+		   }
+		   else{
+			   struct partialMatch* pre = p->prevInMemory;
+			   if (pre != NULL){
+				   pre->nextInMemory = thePM; thePM->prevInMemory = pre;
+				   thePM->nextInMemory = p; p->prevInMemory = thePM;
+			   }
+			   else{
+				   theMemory->beta[betaLocation] = thePM; thePM->nextInMemory = p;
+				   p->prevInMemory = thePM;
+			   }
+
+		   }
+	   }
+	   else{
+		   theMemory->beta[betaLocation] = thePM;
+	   }
+	  **/
      }
    else
      {
+	   printf("RHS\n");
       if (theMemory->last[betaLocation] != NULL)
         {
          theMemory->last[betaLocation]->nextInMemory = thePM;
@@ -721,9 +768,11 @@ globle struct partialMatch *CreateAlphaMatch(
    /*==================================================*/
 #if SLIDING_WINDOW
    int refCount = 0;
+   long long refMask = 0;
    for (struct joinNode* listOfJoins = theHeader->entryJoin;
 	   listOfJoins != NULL;
 	   listOfJoins = listOfJoins->rightMatchNode){
+	   refMask = refMask | (1 << refCount);
 	   refCount += 1;
    }
    theHeader->refCount = refCount;
@@ -734,6 +783,7 @@ globle struct partialMatch *CreateAlphaMatch(
 #if SLIDING_WINDOW
    theMatch->whichEnv = theEnv;
    theMatch->refCount = refCount;
+   theMatch->refMask = refMask;
 #endif
    InitializePMLinks(theMatch);
    theMatch->betaMemory = FALSE;
@@ -1534,6 +1584,7 @@ globle void ResizeBetaMemory(
   struct betaMemory *theMemory)
   {
    struct partialMatch **oldArray, **lastAdd, *thePM, *nextPM;
+   struct partialMatch **lastAdd_beta;
    unsigned long i, oldSize, betaLocation;
    
    oldSize = theMemory->size;
@@ -1543,8 +1594,11 @@ globle void ResizeBetaMemory(
    theMemory->beta = (struct partialMatch **) genalloc(theEnv,sizeof(struct partialMatch *) * theMemory->size);
      
    lastAdd = (struct partialMatch **) genalloc(theEnv,sizeof(struct partialMatch *) * theMemory->size);
+   //lastAdd_beta = (struct partialMatch **) genalloc(theEnv, sizeof(struct partialMatch *) * theMemory->size);
+   
    memset(theMemory->beta,0,sizeof(struct partialMatch *) * theMemory->size);
    memset(lastAdd,0,sizeof(struct partialMatch *) * theMemory->size);
+   //memset(lastAdd_beta, 0, sizeof(struct partialMatch *) * theMemory->size);
    
    for (i = 0; i < oldSize; i++)
      {
@@ -1568,15 +1622,35 @@ globle void ResizeBetaMemory(
          thePM = nextPM;
         } 
      }
-  
+   /*
+   for (unsigned long k = 0; k < theMemory->size; k++){
+	   lastAdd_beta[k] = lastAdd[k];
+   }
+   if (theMemory->beta_last != NULL){
+	   //genfree(theEnv, theMemory->beta_last, sizeof(struct partialMatch *) * oldSize);
+	   theMemory->beta_last = lastAdd_beta;
+   }
+   else{
+	   //genfree(theEnv, theMemory->beta_last, sizeof(struct partialMatch *) * oldSize);
+   }
+   */
+   /**
+   if (theMemory->beta_last != NULL){
+	   theMemory->beta_last = lastAdd;
+   }
+   **/
    if (theMemory->last != NULL)
      { 
-      genfree(theEnv,theMemory->last,sizeof(struct partialMatch *) * oldSize);
+      //genfree(theEnv,theMemory->last,sizeof(struct partialMatch *) * oldSize);
       theMemory->last = lastAdd;
      }
    else
-     { genfree(theEnv,lastAdd,sizeof(struct partialMatch *) * theMemory->size); }
-     
+     { 
+	   //genfree(theEnv,lastAdd,sizeof(struct partialMatch *) * theMemory->size); 
+	   printf("copy\n");
+	   theMemory->beta_last = lastAdd;
+   }
+   theMemory->beta_last = lastAdd;
    genfree(theEnv,oldArray,sizeof(struct partialMatch *) * oldSize);
   }
 

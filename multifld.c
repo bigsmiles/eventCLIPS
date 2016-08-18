@@ -91,9 +91,15 @@ globle void *CreateMultifield2(
    long newSize = size;
 
    if (size <= 0) newSize = 1;
+#if SLIDING_WINDOW
+   EnterCriticalSection(&(MemoryData(theEnv)->memoSection));
+#endif
 
    theSegment = get_var_struct(theEnv,multifield,(long) sizeof(struct field) * (newSize - 1L));
-   
+#if SLIDING_WINDOW
+   LeaveCriticalSection(&(MemoryData(theEnv)->memoSection));
+#endif
+
    theSegment->multifieldLength = size;
    theSegment->depth = (short) EvaluationData(theEnv)->CurrentEvaluationDepth;
    theSegment->busyCount = 0;
@@ -248,9 +254,15 @@ globle void *EnvCreateMultifield(
 
    if (size <= 0) newSize = 1;
    else newSize = size;
+#if SLIDING_WINDOW
+   EnterCriticalSection(&(MemoryData(theEnv)->memoSection));
+#endif
 
    theSegment = get_var_struct(theEnv,multifield,(long) sizeof(struct field) * (newSize - 1L));
- 
+#if SLIDING_WINDOW
+   LeaveCriticalSection(&(MemoryData(theEnv)->memoSection));
+#endif
+
    theSegment->multifieldLength = size;
    theSegment->depth = (short) EvaluationData(theEnv)->CurrentEvaluationDepth;
    theSegment->busyCount = 0;

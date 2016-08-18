@@ -445,6 +445,7 @@ globle void AddNodeFromAlpha(
 		//oneNode->pre = curNode->activeJoinNodeListHead;
 		curNode->activeJoinNodeListTail->next = oneNode;
 		oneNode->pre = curNode->activeJoinNodeListTail;
+		curNode->activeJoinNodeListTail = oneNode;
 #if DATASTRUCT
 		//if (curNode->numOfActiveNode == 1)
 		{
@@ -472,10 +473,30 @@ globle void AddNodeFromAlpha(
 	}
 	else
 	{
-		curNode->activeJoinNodeListTail->next = oneNode;
-		oneNode->pre = curNode->activeJoinNodeListTail;
+		/**/
+		struct activeJoinNode* p = curNode->activeJoinNodeListTail;
+		struct fact* oneNodeFact = (struct fact*)theFact;
+		while (p != curNode->activeJoinNodeListHead && ((p->currentPartialMatch == NULL && ((oneNodeFact->timestamp < ((struct fact*)p->theEntity)->timestamp) || 
+			(p->currentPartialMatch != NULL && p->currentPartialMatch->l_timeStamp > oneNodeFact->timestamp))))){
+			p = p->pre;
+		}
+		if (p == NULL) {
+			curNode->activeJoinNodeListHead->next = oneNode;
+			oneNode->pre = curNode->activeJoinNodeListHead;
+		}
+		else{
+			oneNode->next = p->next;
+			if (p->next != NULL)p->next->pre = oneNode;
+			p->next = oneNode; oneNode->pre = p;
+
+			if (p == curNode->activeJoinNodeListTail)
+				curNode->activeJoinNodeListTail = oneNode;
+		}
+		/**/
+		//curNode->activeJoinNodeListTail->next = oneNode;
+		//oneNode->pre = curNode->activeJoinNodeListTail;
 	}
-	curNode->activeJoinNodeListTail = oneNode;
+	//curNode->activeJoinNodeListTail = oneNode;
 	curNode->numOfActiveNode += 1;
 #if CSECTION
 	LeaveCriticalSection(&(curNode->nodeSection));
@@ -533,6 +554,9 @@ globle void AddOneActiveNode(
 //	EnterCriticalSection(&g_cs);
 //#endif
 	//printf("%d %d\n",curNode->depth,whichEntry);
+	if (partialMatch == NULL){
+		//printf("%d\n", whichEntry);
+	}
 	struct activeJoinNode *oneActiveNode = (struct activeJoinNode*) malloc(sizeof(struct activeJoinNode));
 	oneActiveNode->curPMOnWhichSide = whichEntry;
 	oneActiveNode->currentJoinNode = curNode;
@@ -562,6 +586,7 @@ globle void AddOneActiveNode(
 		//oneActiveNode->pre = curNode->activeJoinNodeListHead;
 		curNode->activeJoinNodeListTail->next = oneActiveNode;
 		oneActiveNode->pre = curNode->activeJoinNodeListTail;
+		curNode->activeJoinNodeListTail = oneActiveNode;
 #if DATASTRUCT
 		//if (curNode->numOfActiveNode == 1)
 		{
@@ -587,10 +612,29 @@ globle void AddOneActiveNode(
 	}
 	else
 	{
-		curNode->activeJoinNodeListTail->next = oneActiveNode;
-		oneActiveNode->pre = curNode->activeJoinNodeListTail;
+		/**/
+		struct activeJoinNode* p = curNode->activeJoinNodeListTail;
+		while (p != curNode->activeJoinNodeListHead && ((p->currentPartialMatch == NULL && (oneActiveNode->currentPartialMatch->l_timeStamp < ((struct fact*)p->theEntity)->timestamp) 
+			|| (p->currentPartialMatch != NULL && p->currentPartialMatch->l_timeStamp > oneActiveNode->currentPartialMatch->l_timeStamp)))){
+			p = p->pre;
+		}
+		if (p == NULL) {
+			curNode->activeJoinNodeListHead->next = oneActiveNode;
+			oneActiveNode->pre = curNode->activeJoinNodeListHead;
+		}
+		else{
+			oneActiveNode->next = p->next;
+			if (p->next != NULL)p->next->pre = oneActiveNode;
+			p->next = oneActiveNode; oneActiveNode->pre = p;
+			
+			if (p == curNode->activeJoinNodeListTail)
+				curNode->activeJoinNodeListTail = oneActiveNode;
+		}
+		/**/
+		//curNode->activeJoinNodeListTail->next = oneActiveNode;
+		//oneActiveNode->pre = curNode->activeJoinNodeListTail;
 	}
-	curNode->activeJoinNodeListTail = oneActiveNode; 
+	//curNode->activeJoinNodeListTail = oneActiveNode; 
 	curNode->numOfActiveNode += 1;
 #if CSECTION
 	LeaveCriticalSection(&curNode->nodeSection);

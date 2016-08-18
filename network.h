@@ -96,6 +96,10 @@ struct betaMemory
    unsigned long size;
    unsigned long count;
    struct partialMatch **beta;
+#if SLIDING_WINDOW
+   struct partialMatch **beta_last;
+
+#endif
    struct partialMatch **last;
   };
 

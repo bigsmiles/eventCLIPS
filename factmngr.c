@@ -1228,9 +1228,13 @@ globle struct fact *CreateFactBySize(
 
    if (size <= 0) newSize = 1;
    else newSize = size;
-
+#if SLIDING_WINDOW
+   EnterCriticalSection(&(MemoryData(theEnv)->memoSection));
+#endif
    theFact = get_var_struct(theEnv,fact,sizeof(struct field) * (newSize - 1));
-   
+#if SLIDING_WINDOW
+   LeaveCriticalSection(&(MemoryData(theEnv)->memoSection));
+#endif
    theFact->depth = (unsigned) EvaluationData(theEnv)->CurrentEvaluationDepth;
    theFact->garbage = FALSE;
    theFact->factIndex = 0LL;
