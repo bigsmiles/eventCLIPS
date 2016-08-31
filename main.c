@@ -72,6 +72,8 @@ HANDLE g_debug;
 HANDLE g_hSemaphoreBuffer,g_hSemaphoreBufferOfThread1, g_hSemaphoreBufferOfThread2;
 extern int totalAddActiveNode,totalGetActiveNode;
 
+char print_file_path[3][60] = { "","D:\\VS\\testCLPS\\testCLIPS\\Debug\\result_window0821a.txt", "D:\\VS\\testCLPS\\testCLIPS\\Debug\\result_window0821b.txt" };
+FILE *print_file[3];
 LARGE_INTEGER search_time1, search_time2;
 long long search_time = 0;
 long long cur_partialmatch_time[3] = {99999999999,999999999999,999999999999};
@@ -133,29 +135,20 @@ int main(
 #endif
 	
 	//char rule_file_path[50] = "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_test.clp";
-	char rule_file_path[50] = "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_630.clp";
-	//EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
-	//EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
-	//EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_window.clp");
-	//EnvLoad(theEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_630.clp");
+	char rule_file_path[50] = "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_826.clp";
+	//char rule_file_path[50] = "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_723.clp";
+
+	
+	
 	EnvLoad(theEnv, rule_file_path);
 
 #if THREAD || REALMTHREAD
 
-	//EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
-	//EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
-	//EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_window.clp");
-	//EnvLoad(betaEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_630.clp");
+	
 	EnvLoad(betaEnv, rule_file_path);
-	//EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
-	//EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
-	//EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_window.clp");
-	//EnvLoad(thirdEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_630.clp");
+	
 	EnvLoad(thirdEnv, rule_file_path);
-	//EnvLoad(fourEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule.clp");
-	//EnvLoad(fourEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\debug.clp");
-	//EnvLoad(fourEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_window.clp");
-	//EnvLoad(fourEnv, "D:\\VS\\testCLPS\\testCLIPS\\Debug\\CLIPSRule_630.clp");
+	
 	EnvLoad(fourEnv, rule_file_path);
 
 	struct ThreadNode *env1 = (struct ThreadNode*)malloc(sizeof(struct ThreadNode));
@@ -164,14 +157,12 @@ int main(
 	env2->theEnv = thirdEnv; env2->threadTag = 1;
 	struct ThreadNode *env3 = (struct ThreadNode*)malloc(sizeof(struct ThreadNode));
 	env3->theEnv = fourEnv; env3->threadTag = 2;
-
 	
 #endif	
 	
 	
 #if THREAD
 	//add by xuchao,start this execute thread
-#if MUTILTHREAD || REALMTHREAD
 	/**/
 	hThread = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env1, 0, NULL);
 	SetThreadAffinityMask(hThread, 1 << 1);//线程指定在某个cpu运行
@@ -180,11 +171,6 @@ int main(
 	/**/
 	//hThread2 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env3, 0, NULL);
 	//SetThreadAffinityMask(hThread2, 1 << 3);//线程指定在某个cpu运行
-#else if
-	hThread = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env1, 0, NULL);
-#endif
-	//hThread1 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, thirdEnv, 0, NULL);
-	//SetThreadAffinityMask(hThread1, 1 << 2);//线程指定在某个cpu运行
 #endif
 
 #if AUTOTEST
@@ -196,12 +182,12 @@ int main(
 	
 	//char fact_file_path[50] = "D:\\VS\\stdCLIPS\\Debug\\CLIPSFact_test.txt";
 	char fact_file_path[50] = "D:\\VS\\stdCLIPS\\Debug\\CLIPSFact_812.txt";
+	//char fact_file_path[50] = "D:\\VS\\stdCLIPS\\Debug\\CLIPSFact_723.txt";
 
-	//FILE *pFile = fopen("D:\\VS\\stdCLIPS\\Debug\\CLIPSFact.txt", "r");
-	//FILE *pFile = fopen("D:\\VS\\stdCLIPS\\Debug\\facts.txt", "r");
-	//FILE *pFile = fopen("D:\\VS\\stdCLIPS\\Debug\\CLIPSFact_window_d.txt", "r");
-	//FILE *pFile = fopen("D:\\VS\\stdCLIPS\\Debug\\CLIPSFact_812.txt", "r");
+	
 	FILE *pFile = fopen(fact_file_path, "r");
+	print_file[1] = fopen(print_file_path[1], "w");
+	print_file[0] = fopen(print_file_path[2], "w");
 	
 	if (pFile == NULL)
 		printf("file error!\n");
@@ -217,7 +203,8 @@ int main(
 	//DWORD start = GetTickCount();
 	QueryPerformanceCounter(&start);
 	printf("time: 0  %lld\n", start.QuadPart);
-	long long line_count = 0;
+	//printf("time: 0  %lld\n", time(NULL));
+	long long line_count = 1;
 	while (fgets(tmpBuffer, 100, pFile))
 	//while (line_count--)
 	{
@@ -246,12 +233,13 @@ int main(
 		
 #endif
 		//printf("%s\n", tmpBuffer); break;
+		if (line_count++ > 25000)break;
 		EnvAssertString(theEnv, tmpBuffer);
-		//if (line_count++ > 200000)break;
+		
 		
 	} 
 	QueryPerformanceCounter(&end);
-	printf("time over %lld ,total: %lld,line_count %lld\n", end.QuadPart, (end.QuadPart - start.QuadPart) / freq.QuadPart,line_count);
+	printf("time over %lld ,total: %lld,line_count %lld\n", end.QuadPart,(end.QuadPart - start.QuadPart) / freq.QuadPart,line_count);
 	/**
 	hThread = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env1, 0, NULL);
 	SetThreadAffinityMask(hThread, 1 << 1);//线程指定在某个cpu运行
@@ -260,7 +248,7 @@ int main(
 	**/
 	//hThread2 = (HANDLE)_beginthreadex(NULL, 0, MoveOnJoinNetworkThread, env3, 0, NULL);
 	//SetThreadAffinityMask(hThread2, 1 << 3);//线程指定在某个cpu运行
-	Sleep(255000);
+	Sleep(265000);
 	//CommandLoop(theEnv);
 #if !THREAD 
 	CommandLoop(theEnv);
@@ -285,9 +273,6 @@ int main(
 	//DeleteCriticalSection(&g_cs);
 	DeleteCriticalSection(&g_runDebug);
 	CloseHandle(hThread);
-#if MUTILTHREAD || REALMTHREAD
-	//CloseHandle(hThread1);
-#endif
 	
 #endif
 

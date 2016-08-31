@@ -376,7 +376,8 @@ static void PrimeJoinFromLeftMemory(
          
          UpdateBetaPMLinks(theEnv,linker,theList->leftParent,theList->rightParent,joinPtr,hashValue,LHS);
          
-         NetworkAssertLeft(theEnv,linker,joinPtr);
+         //NetworkAssertLeft(theEnv,linker,joinPtr);
+		 NetworkAssertLeft(theEnv, linker, joinPtr,0);
         }
      }
   }

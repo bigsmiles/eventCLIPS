@@ -223,14 +223,15 @@ globle void UpdateBetaPMLinks(
    
    if (side == LHS)
      {
-	   /**
+	   /**/
       thePM->nextInMemory = theMemory->beta[betaLocation];
       if (theMemory->beta[betaLocation] != NULL)
         { theMemory->beta[betaLocation]->prevInMemory = thePM; }
       theMemory->beta[betaLocation] = thePM;
 	
-	  **/
+	  /**/
 	   /**/
+#if SLIDING_WINDOW
 	   if (theMemory->beta_last[betaLocation] != NULL)
 	   //if (theMemory->beta[betaLocation] != NULL)
 	   {
@@ -240,7 +241,8 @@ globle void UpdateBetaPMLinks(
 	   else{ theMemory->beta[betaLocation] = thePM; }
 
 	   theMemory->beta_last[betaLocation] = thePM; thePM->nextInMemory = NULL;
-	   /**/
+#endif
+	  /**/
 	   /**
 	   struct partialMatch *p = theMemory->beta[betaLocation];
 	   thePM->nextInMemory = NULL; thePM->prevInMemory = NULL;
@@ -767,8 +769,10 @@ globle struct partialMatch *CreateAlphaMatch(
    /* Create the alpha match and intialize its values. */
    /*==================================================*/
 #if SLIDING_WINDOW
+   
    int refCount = 0;
    long long refMask = 0;
+   /**
    for (struct joinNode* listOfJoins = theHeader->entryJoin;
 	   listOfJoins != NULL;
 	   listOfJoins = listOfJoins->rightMatchNode){
@@ -776,6 +780,7 @@ globle struct partialMatch *CreateAlphaMatch(
 	   refCount += 1;
    }
    theHeader->refCount = refCount;
+   **/
 
    EnterCriticalSection(&(MemoryData(theEnv)->memoSection));
 #endif
@@ -1641,16 +1646,19 @@ globle void ResizeBetaMemory(
    **/
    if (theMemory->last != NULL)
      { 
-      //genfree(theEnv,theMemory->last,sizeof(struct partialMatch *) * oldSize);
+      genfree(theEnv,theMemory->last,sizeof(struct partialMatch *) * oldSize);
       theMemory->last = lastAdd;
      }
    else
      { 
-	   //genfree(theEnv,lastAdd,sizeof(struct partialMatch *) * theMemory->size); 
-	   printf("copy\n");
+	   genfree(theEnv,lastAdd,sizeof(struct partialMatch *) * theMemory->size); 
+#if SLIDING_WINDOW
 	   theMemory->beta_last = lastAdd;
+#endif
    }
+#if SLIDING_WINDOW
    theMemory->beta_last = lastAdd;
+#endif
    genfree(theEnv,oldArray,sizeof(struct partialMatch *) * oldSize);
   }
 

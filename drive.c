@@ -76,9 +76,10 @@
    extern CRITICAL_SECTION g_move; 
    extern long long search_time;
    extern long long cur_partialmatch_time[3];
+   extern FILE* print_file[3];
 #if SLIDING_WINDOW
 #define WINDOW_SIZE 20000
-#define FREEPM 1
+#define FREEPM 0
 #endif
 /************************************************/
 /* NetworkAssert: Primary routine for filtering */
@@ -387,7 +388,8 @@ globle void NetworkAssertRight(
 globle void NetworkAssertLeft(
   void *theEnv,
   struct partialMatch *lhsBinds,
-  struct joinNode *join)
+  struct joinNode *join,
+  int ThreadID)
   {
    struct partialMatch *rhsBinds;
    int exprResult, restore = FALSE;
@@ -420,9 +422,12 @@ globle void NetworkAssertLeft(
      {
 #if THREAD
 	   //void *rule = EnvFindDefRule(theEnv,EnvGetDefruleName(GetEnvironmentByIndex(0), join->ruleToActivate));
+	   //if (search_time++ < 4200000)return;
 	   EnterCriticalSection(&g_runDebug);
 	   LARGE_INTEGER large_time;
+	   
 	   QueryPerformanceCounter(&large_time);
+	   //time_t end_time = time(NULL);
 	   long long time = (long long)large_time.QuadPart;
 	   long long l_time = 0,r_time = 0;
 #if SLIDING_WINDOW
@@ -430,7 +435,10 @@ globle void NetworkAssertLeft(
 	   r_time = lhsBinds->r_timeStamp;
 #endif
 	   search_time = time;
-	   printf("%s %d %lld  %lld %lld\n", join->ruleToActivate->header.name->contents,join->ruleToActivate->salience,time,l_time,r_time);
+	   
+	   //fprintf(print_file[ThreadID],"%s %lld \n", join->ruleToActivate->header.name->contents,time);
+	   printf("%s %lld \n", join->ruleToActivate->header.name->contents, time);
+	   //printf("%lld \n", time);
 	   LeaveCriticalSection(&g_runDebug);
 	   /*
 	   AddActivation(theEnv, EnvFindDefrule(theEnv, EnvGetDefruleName(GetEnvironmentByIndex(0), join->ruleToActivate)), lhsBinds);
@@ -536,9 +544,10 @@ globle void NetworkAssertLeft(
 			   rhsBinds = rhsBinds->nextInMemory;
 			   //free this PM tmp;
 			   /**/
+			  
 #if FREEPM  
 			  
-			   //if (factTime > r_time) 
+			   //if (factTime > fix_r_time)  break;//8-23
 			   int useable = TRUE;
 			   long long may_be_min_time = l_time;
 			   struct partialMatch* left_memory = GetLeftBetaMemory(join, lhsBinds->hashValue);
@@ -550,18 +559,19 @@ globle void NetworkAssertLeft(
 			   if (join->numOfActiveNode > 0 && join->activeJoinNodeListHead->next->currentPartialMatch == NULL){
 				   may_be_min_time = min(may_be_min_time, ((struct fact*)(join->activeJoinNodeListHead->next->theEntity))->timestamp);
 			   }
-			   if (join->numOfActiveNode > 0 && join->activeJoinNodeListTail->currentPartialMatch != NULL)
-				   may_be_min_time = min(may_be_min_time, join->activeJoinNodeListTail->currentPartialMatch->l_timeStamp);
+			   //if (join->numOfActiveNode > 0 && join->activeJoinNodeListTail->currentPartialMatch != NULL)
+				//   may_be_min_time = min(may_be_min_time, join->activeJoinNodeListTail->currentPartialMatch->l_timeStamp);
 			   
 			   LeaveCriticalSection(&join->nodeSection);
 			   struct joinNode* last_level_join = join->lastLevel;
 			   //struct joinNode* last_level_join = join;
 			   /**/
 			   long long x_alpha = 9999999999999;
-			   while (last_level_join)
+			   //while (last_level_join)
 			   {
 				   unsigned long hashoff = entryHashValue;
 				   //unsigned long hashoff = ComputeRightHashValue(GetEnvironmentByIndex(1), (struct patternNodeHeader *) last_level_join->rightSideEntryStructure);
+				   
 				   struct partialMatch* x_PM  = GetAlphaMemory(GetEnvironmentByIndex(1), (struct patternNodeHeader *) last_level_join->rightSideEntryStructure, hashoff);
 				   x_alpha = 9999999999999;
 				   if(x_PM != NULL) x_alpha= x_PM->l_timeStamp;
@@ -571,13 +581,15 @@ globle void NetworkAssertLeft(
 				   {
 					   may_be_min_time = min(may_be_min_time, (min(cur_partialmatch_time[1], cur_partialmatch_time[2])));
 				   }
-				   if (/*last_level_join->threadTag != -1 && */last_level_join->numOfActiveNode > 0){
+				   /**
+				   if (last_level_join->numOfActiveNode > 0){//last_level_join->threadTag != -1 && 
 					   if (last_level_join->activeJoinNodeListHead->next->currentPartialMatch != NULL)
 						   x_beta = last_level_join->activeJoinNodeListHead->next->currentPartialMatch->l_timeStamp;
 					   else
 						   x_beta = ((struct fact*)(last_level_join->activeJoinNodeListHead->next->theEntity))->timestamp;
 					   
 				   }
+				   */
 				   LeaveCriticalSection(&last_level_join->nodeSection);
 				   may_be_min_time = min(may_be_min_time, min(x_alpha,x_beta));
 				   last_level_join = last_level_join->lastLevel;

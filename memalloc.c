@@ -104,7 +104,7 @@ globle void *genalloc(
    char *memPtr;
    //add by xuchao
 #if SLIDING_WINDOW
-   EnterCriticalSection(&(MemoryData(theEnv)->memoSection));
+   //EnterCriticalSection(&(MemoryData(theEnv)->memoSection));
 #endif
          
 #if   BLOCK_MEMORY
@@ -151,7 +151,7 @@ globle void *genalloc(
  
    //add by xuchao
 #if SLIDING_WINDOW
-   LeaveCriticalSection(&(MemoryData(theEnv)->memoSection));
+   //LeaveCriticalSection(&(MemoryData(theEnv)->memoSection));
 #endif
    return((void *) memPtr);
   }
@@ -199,7 +199,7 @@ globle int genfree(
   size_t size)
   {   
 #if SLIDING_WINDOW
-	EnterCriticalSection(&(MemoryData(theEnv)->memoSection));
+	//EnterCriticalSection(&(MemoryData(theEnv)->memoSection));
 #endif
 #if BLOCK_MEMORY
    if (ReturnChunk(theEnv,waste,size) == FALSE)
@@ -215,7 +215,7 @@ globle int genfree(
    MemoryData(theEnv)->MemoryAmount -= (long) size;
    MemoryData(theEnv)->MemoryCalls--;
 #if SLIDING_WINDOW
-   LeaveCriticalSection(&(MemoryData(theEnv)->memoSection));
+   //LeaveCriticalSection(&(MemoryData(theEnv)->memoSection));
 #endif
    return(0);
   }

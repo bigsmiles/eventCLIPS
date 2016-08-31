@@ -50,7 +50,7 @@
 
    void                           NetworkAssert(void *,struct partialMatch *,struct joinNode *);
    intBool                        EvaluateJoinExpression(void *,struct expr *,struct joinNode *);
-   void                           NetworkAssertLeft(void *,struct partialMatch *,struct joinNode *);
+   void                           NetworkAssertLeft(void *,struct partialMatch *,struct joinNode *,int);
    void                           NetworkAssertRight(void *,struct partialMatch *,struct joinNode *);
    void                           PPDrive(void *,struct partialMatch *,struct partialMatch *,struct joinNode *);
    unsigned long                  BetaMemoryHashValue(void *,struct expr *,struct partialMatch *,struct partialMatch *,struct joinNode *);
